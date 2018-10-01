@@ -48,9 +48,10 @@
 							  <option value="video_004">video_004</option>
 							</select>
 						</td>
-						<td width="300px" align="left">
+						<td width="450px" align="left">
 							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;" onClick="getCoordinatesVideo()">Load video</button>
 							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;">Load all videos</button>
+							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;" onClick="getFeatures()">Get features</button>
 						</td>
 					</tr>
 				</table>
@@ -58,8 +59,7 @@
 				<table>
 					<tr valign="top">
 						<td>
-							<video id="video" src="videos/christian.mp4" width="700" height="600"></video><br>
-							<!--<video id="video" src="videos/christian.mp4"></video><br>-->
+							<video id="video" width="640" height="480"></video><br>
 						</td>
 						<td width="50px"></td>
 						<td width="400px">
@@ -123,6 +123,11 @@
 				
 			</td>
 			<td width="10%"></td>
+		</tr>
+		<tr>
+			<td colspan="3">
+				<p><span id="all_samples"></span></p>
+			</td>
 		</tr>
 	</table>
 

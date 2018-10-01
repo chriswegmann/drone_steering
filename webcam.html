@@ -9,29 +9,106 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Capturing coordinates with PoseNet</title>
 
+	<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+	<script src="https://d3js.org/d3-fetch.v1.min.js"></script>
 	<script src="https://unpkg.com/@tensorflow/tfjs"></script>
 	<script src="https://unpkg.com/@tensorflow-models/posenet"></script>
 	<script src="data_grabbing.js"></script>
-	  
-	<style>
-	#video {
-	    width: 800px;
-	    height: 555px;
-	    background-color: #666;
-	}
-	</style>
 
+	<link href="https://fonts.googleapis.com/css?family=Bai+Jamjuree" rel="stylesheet">
+	<link rel="stylesheet" href="styles.css">
+	  
 </head>
-  
+
 <body>
 
-	<div id="main">
-		<video id="video" playsinline="" style=" -moz-transform: scaleX(-1); -o-transform: scaleX(-1); -webkit-transform: scaleX(-1); transform: scaleX(-1);"></video>
-		<canvas id="output"></canvas>
-	</div>	
+	<br>
 
-	<button id="video_button" onclick='getCoordinatesWebcam()'>Get coordinates</button>
-	<p>We have stored the coordinates <span id="count">0</span> time(s).</p>
+	<table width="100%">
+		<tr valign="middle">
+			<td width="10%"></td>
+			<td width="80%">
+				
+				<table width="100%">
+					<tr>
+						<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;" height="40px" valign="bottom">
+							<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 24pt">Webcam</span><br>
+						</td>
+					</tr>
+				</table>
+
+				<br>
+	
+				<table>
+					<tr>
+						<td width="450px" align="left">
+							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;" onClick="getCoordinatesWebcam()">Load webcam</button>
+						</td>
+					</tr>
+				</table>
+				
+				<table>
+					<tr valign="top">
+						<td>
+							<div id="main">
+								<video id="video" playsinline="" style=" -moz-transform: scaleX(-1); -o-transform: scaleX(-1); -webkit-transform: scaleX(-1); transform: scaleX(-1);"></video>
+								<canvas id="output"></canvas>
+							</div>	
+						</td>
+						<td width="50px"></td>
+						<td width="400px">
+
+							<table width="100%">
+								<tr>
+									<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;">
+										<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 16pt">Direction (Debugging))</span><br>
+									</td>
+								</tr>
+							</table>
+
+							<table style="border: none;">
+								<tr><td></td><td align="center" width="180px"></td>
+								<tr style="background-color: #f2f2f2;"><td>stop</td><td><span id="stop_calc"></span></td>
+								<tr><td>left</td><td><span id="left_calc"></span></td>
+								<tr style="background-color: #f2f2f2;"><td>right</td><td><span id="right_calc"></span></td>
+								<tr><td>up</td><td><span id="up_calc"></span></td>
+								<tr style="background-color: #f2f2f2;"><td>down</td><td><span id="down_calc"></span></td>
+							</table>
+
+						</td>
+
+						<td width="50px"></td>
+						
+						<td width="400px">
+
+							<table width="100%">
+								<tr>
+									<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;">
+										<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 16pt;">Direction</span><br>
+									</td>
+								</tr>
+								<tr>
+									<td align="center">
+										<br><br>
+										<img id="label_display" src="images/stop.png">
+									</td>
+								</tr>
+							</table>
+
+						</td>				
+						
+					</tr>					
+				</table>
+				
+			</td>
+			<td width="10%"></td>
+		</tr>
+		<tr>
+			<td colspan="3">
+				<p><span id="all_samples"></span></p>
+			</td>
+		</tr>
+	</table>
 
 </body>
 

@@ -7,6 +7,9 @@
   let estimator = null;
   localStorage.position = ''
 	var label = [];
+	var sample = [];
+	var all_samples = [];
+	var all_samples_json = '';
 
 
 	function getCoordinatesWebcam() {
@@ -19,10 +22,9 @@
 		video = document.getElementById('video');
 
 	  tid = setInterval(function() {
-	    if (i < 10) {
+	    if (i < 100) {
 	    	++i;
-	      document.getElementById('count').innerHTML = i;
-	      getCoordSnapshot(video);
+	      getCoordSnapshot(video,0,'webcam');
 	    }
 	  }, interval);
 
@@ -46,17 +48,20 @@
 
 	  tid = setInterval(function() {
 	    if (!video.ended && !video.paused) {
-	    	++i;
 	      document.getElementById('count').innerHTML = i;
-	      getCoordSnapshot(video);
+	      getCoordSnapshot(video,i,'video');
 	      showLabel(i);
+	    	++i;
 	    }
 	  }, interval);
+	  
+	  //JSON.stringify(all_samples);
+	  //console.log(all_samples);
 
 	}
   
   
-  function getCoordSnapshot(imgData) {
+  function getCoordSnapshot(imgData,label_index,sourceType) {
 	// gets to coordinates of imgData at the given time and stores it locally in a log file. This log file is available under
 	// C:\Users\Christian\AppData\Local\Google\Chrome\User Data\Default\Local Storage\leveldb
 	
@@ -67,44 +72,97 @@
         return estimator(imgData, imageScaleFactor, flipHorizontal, outputStride)
       })
       .then((resp) => {
-      	document.getElementById("nose_x").innerHTML = resp.keypoints[0].position.x;
-      	document.getElementById("nose_y").innerHTML = resp.keypoints[0].position.y;
-      	document.getElementById("leftEye_x").innerHTML = resp.keypoints[1].position.x;
-      	document.getElementById("leftEye_y").innerHTML = resp.keypoints[1].position.y;
-      	document.getElementById("rightEye_x").innerHTML = resp.keypoints[2].position.x;
-      	document.getElementById("rightEye_y").innerHTML = resp.keypoints[2].position.y;
-      	document.getElementById("leftEar_x").innerHTML = resp.keypoints[3].position.x;
-      	document.getElementById("leftEar_y").innerHTML = resp.keypoints[3].position.y;
-      	document.getElementById("rightEar_x").innerHTML = resp.keypoints[4].position.x;
-      	document.getElementById("rightEar_y").innerHTML = resp.keypoints[4].position.y;
-      	document.getElementById("leftShoulder_x").innerHTML = resp.keypoints[5].position.x;
-      	document.getElementById("leftShoulder_y").innerHTML = resp.keypoints[5].position.y;
-      	document.getElementById("rightShoulder_x").innerHTML = resp.keypoints[6].position.x;
-      	document.getElementById("rightShoulder_y").innerHTML = resp.keypoints[6].position.y;
-      	document.getElementById("leftElbow_x").innerHTML = resp.keypoints[7].position.x;
-      	document.getElementById("leftElbow_y").innerHTML = resp.keypoints[7].position.y;
-      	document.getElementById("rightElbow_x").innerHTML = resp.keypoints[8].position.x;
-      	document.getElementById("rightElbow_y").innerHTML = resp.keypoints[8].position.y;
-      	document.getElementById("leftWrist_x").innerHTML = resp.keypoints[9].position.x;
-      	document.getElementById("leftWrist_y").innerHTML = resp.keypoints[9].position.y;
-      	document.getElementById("rightWrist_x").innerHTML = resp.keypoints[10].position.x;
-      	document.getElementById("rightWrist_y").innerHTML = resp.keypoints[10].position.y;
-      	document.getElementById("leftHip_x").innerHTML = resp.keypoints[11].position.x;
-      	document.getElementById("leftHip_y").innerHTML = resp.keypoints[11].position.y;
-      	document.getElementById("rightHip_x").innerHTML = resp.keypoints[12].position.x;
-      	document.getElementById("rightHip_y").innerHTML = resp.keypoints[12].position.y;
-      	document.getElementById("leftKnee_x").innerHTML = resp.keypoints[13].position.x;
-      	document.getElementById("leftKnee_y").innerHTML = resp.keypoints[13].position.y;
-      	document.getElementById("rightKnee_x").innerHTML = resp.keypoints[14].position.x;
-      	document.getElementById("rightKnee_y").innerHTML = resp.keypoints[14].position.y;
-      	document.getElementById("leftAnkle_x").innerHTML = resp.keypoints[15].position.x;
-      	document.getElementById("leftAnkle_y").innerHTML = resp.keypoints[15].position.y;
-      	document.getElementById("rightAnkle_x").innerHTML = resp.keypoints[16].position.x;
-      	document.getElementById("rightAnkle_y").innerHTML = resp.keypoints[16].position.y;
+      	
+      	if (sourceType=='video') {
 
-        position = JSON.stringify(resp)
-        console.log(position);
-        localStorage.position = localStorage.position + position;
+	      	document.getElementById("nose_x").innerHTML = resp.keypoints[0].position.x;
+	      	document.getElementById("nose_y").innerHTML = resp.keypoints[0].position.y;
+	      	document.getElementById("leftEye_x").innerHTML = resp.keypoints[1].position.x;
+	      	document.getElementById("leftEye_y").innerHTML = resp.keypoints[1].position.y;
+	      	document.getElementById("rightEye_x").innerHTML = resp.keypoints[2].position.x;
+	      	document.getElementById("rightEye_y").innerHTML = resp.keypoints[2].position.y;
+	      	document.getElementById("leftEar_x").innerHTML = resp.keypoints[3].position.x;
+	      	document.getElementById("leftEar_y").innerHTML = resp.keypoints[3].position.y;
+	      	document.getElementById("rightEar_x").innerHTML = resp.keypoints[4].position.x;
+	      	document.getElementById("rightEar_y").innerHTML = resp.keypoints[4].position.y;
+	      	document.getElementById("leftShoulder_x").innerHTML = resp.keypoints[5].position.x;
+	      	document.getElementById("leftShoulder_y").innerHTML = resp.keypoints[5].position.y;
+	      	document.getElementById("rightShoulder_x").innerHTML = resp.keypoints[6].position.x;
+	      	document.getElementById("rightShoulder_y").innerHTML = resp.keypoints[6].position.y;
+	      	document.getElementById("leftElbow_x").innerHTML = resp.keypoints[7].position.x;
+	      	document.getElementById("leftElbow_y").innerHTML = resp.keypoints[7].position.y;
+	      	document.getElementById("rightElbow_x").innerHTML = resp.keypoints[8].position.x;
+	      	document.getElementById("rightElbow_y").innerHTML = resp.keypoints[8].position.y;
+	      	document.getElementById("leftWrist_x").innerHTML = resp.keypoints[9].position.x;
+	      	document.getElementById("leftWrist_y").innerHTML = resp.keypoints[9].position.y;
+	      	document.getElementById("rightWrist_x").innerHTML = resp.keypoints[10].position.x;
+	      	document.getElementById("rightWrist_y").innerHTML = resp.keypoints[10].position.y;
+	      	document.getElementById("leftHip_x").innerHTML = resp.keypoints[11].position.x;
+	      	document.getElementById("leftHip_y").innerHTML = resp.keypoints[11].position.y;
+	      	document.getElementById("rightHip_x").innerHTML = resp.keypoints[12].position.x;
+	      	document.getElementById("rightHip_y").innerHTML = resp.keypoints[12].position.y;
+	      	document.getElementById("leftKnee_x").innerHTML = resp.keypoints[13].position.x;
+	      	document.getElementById("leftKnee_y").innerHTML = resp.keypoints[13].position.y;
+	      	document.getElementById("rightKnee_x").innerHTML = resp.keypoints[14].position.x;
+	      	document.getElementById("rightKnee_y").innerHTML = resp.keypoints[14].position.y;
+	      	document.getElementById("leftAnkle_x").innerHTML = resp.keypoints[15].position.x;
+	      	document.getElementById("leftAnkle_y").innerHTML = resp.keypoints[15].position.y;
+	      	document.getElementById("rightAnkle_x").innerHTML = resp.keypoints[16].position.x;
+	      	document.getElementById("rightAnkle_y").innerHTML = resp.keypoints[16].position.y;
+
+					
+	      	sample[0] = Math.round(resp.keypoints[5].position.x, 0);
+	      	sample[1] = Math.round(resp.keypoints[5].position.y, 0);
+	      	sample[2] = Math.round(resp.keypoints[6].position.x, 0);
+	      	sample[3] = Math.round(resp.keypoints[6].position.y, 0);
+	      	sample[4] = Math.round(resp.keypoints[7].position.x, 0);
+	      	sample[5] = Math.round(resp.keypoints[7].position.y, 0);
+	      	sample[6] = Math.round(resp.keypoints[8].position.x, 0);
+	      	sample[7] = Math.round(resp.keypoints[8].position.y, 0);
+	      	sample[8] = Math.round(resp.keypoints[9].position.x, 0);
+	      	sample[9] = Math.round(resp.keypoints[9].position.y, 0);
+	      	sample[10] = Math.round(resp.keypoints[10].position.x, 0);
+	      	sample[11] = Math.round(resp.keypoints[10].position.y, 0);
+	      	sample[12] = label[label_index];
+	      	
+
+	        sample_json = JSON.stringify(sample);
+	        all_samples_json = all_samples_json + sample_json;
+
+	        //position = JSON.stringify(resp);
+	        //console.log(position);
+	        //localStorage.position = localStorage.position + position;
+	      }
+
+      	if (sourceType=='webcam') {
+	      	var direction = 'stop.png'
+      		
+					if ((resp.keypoints[9].position.x - resp.keypoints[5].position.x) > 60) {
+						//var left_ind = 'detected (' + Math.round(resp.keypoints[9].position.x) + ' | ' + Math.round(resp.keypoints[5].position.x) + ')';
+						direction = 'left.png'
+					}
+					//else {
+						//var left_ind = Math.round(resp.keypoints[9].position.x) + ' | ' + Math.round(resp.keypoints[5].position.x);
+					//}
+					
+					if ((resp.keypoints[6].position.x - resp.keypoints[10].position.x) > 60) {
+						//var right_ind = 'detected (' + Math.round(resp.keypoints[6].position.x) + ' | ' + Math.round(resp.keypoints[10].position.x) + ')';
+						direction = 'right.png';
+					}
+					//else {
+						//var right_ind = Math.round(resp.keypoints[6].position.x) + ' | ' + Math.round(resp.keypoints[10].position.x);
+					//}
+					
+					document.getElementById("label_display").src = "images/" + direction;		
+
+	      	document.getElementById("stop_calc").innerHTML = '';
+	      	//document.getElementById("left_calc").innerHTML = left_ind;
+	      	//document.getElementById("right_calc").innerHTML = right_ind;
+	      	document.getElementById("up_calc").innerHTML = '';
+	      	document.getElementById("down_calc").innerHTML = '';
+      		
+      	}
+
       })
   }
 
@@ -170,7 +228,7 @@
 			for (i = 0; i < data.length; i++) { 
 			    label[i] = parseInt(data[i]["label"]);
 			}
-		  console.log(data);
+		  //console.log(data);
 
 		});
 		
@@ -204,4 +262,15 @@
 		
 		document.getElementById("label_display").src = "images/" + img_src;		
 		
+	}
+	
+	
+	function getFeatures() {
+	// dumps all samples (features and label) at the bottom of the page
+		
+		var all_samples_csv = all_samples_json.replace(/\]\[/g,'<br>')
+		all_samples_csv = all_samples_csv.replace('[','')
+		all_samples_csv = all_samples_csv.replace(']','')
+		
+		document.getElementById("all_samples").innerHTML = all_samples_csv;
 	}
