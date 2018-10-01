@@ -6,14 +6,14 @@
 	const videoHeight = 555;
   let estimator = null;
   localStorage.position = ''
+	var label = [];
 
 
-	function get_coordinates_webcam() {
+	function getCoordinatesWebcam() {
 	// gets the coordinates for each snapshot of the webcam
-	// todo: replace interval-based condition with proper stop button
 
 		var i = 0;
-		var interval = 300
+		var interval = 200
 
 		startCamera();	
 		video = document.getElementById('video');
@@ -21,26 +21,35 @@
 	  tid = setInterval(function() {
 	    if (i < 10) {
 	    	++i;
-	      document.getElementById('count').innerHTML = i
-	      getCoordSnapshot(video)
+	      document.getElementById('count').innerHTML = i;
+	      getCoordSnapshot(video);
 	    }
 	  }, interval);
 
 	}
 
 
-	function get_coordinates_video() {
+	function getCoordinatesVideo() {
 	// runs the video and gets the coordinates for each snapshot of a time interval as long as the video is running
 
 		var i = 0;
 		var interval = 300
-		var video = startStopVideo()
+	  var video = document.getElementById('video');
+
+		var selected_video = document.getElementById("selected_video");
+		var video_name = selected_video.options[selected_video.selectedIndex].value;
+
+	  loadLabels(video_name);
+
+	  video.src = 'videos/' + video_name + '.mp4';
+		video.play();
 
 	  tid = setInterval(function() {
 	    if (!video.ended && !video.paused) {
 	    	++i;
-	      document.getElementById('count').innerHTML = i
-	      getCoordSnapshot(video)
+	      document.getElementById('count').innerHTML = i;
+	      getCoordSnapshot(video);
+	      showLabel(i);
 	    }
 	  }, interval);
 
@@ -58,6 +67,41 @@
         return estimator(imgData, imageScaleFactor, flipHorizontal, outputStride)
       })
       .then((resp) => {
+      	document.getElementById("nose_x").innerHTML = resp.keypoints[0].position.x;
+      	document.getElementById("nose_y").innerHTML = resp.keypoints[0].position.y;
+      	document.getElementById("leftEye_x").innerHTML = resp.keypoints[1].position.x;
+      	document.getElementById("leftEye_y").innerHTML = resp.keypoints[1].position.y;
+      	document.getElementById("rightEye_x").innerHTML = resp.keypoints[2].position.x;
+      	document.getElementById("rightEye_y").innerHTML = resp.keypoints[2].position.y;
+      	document.getElementById("leftEar_x").innerHTML = resp.keypoints[3].position.x;
+      	document.getElementById("leftEar_y").innerHTML = resp.keypoints[3].position.y;
+      	document.getElementById("rightEar_x").innerHTML = resp.keypoints[4].position.x;
+      	document.getElementById("rightEar_y").innerHTML = resp.keypoints[4].position.y;
+      	document.getElementById("leftShoulder_x").innerHTML = resp.keypoints[5].position.x;
+      	document.getElementById("leftShoulder_y").innerHTML = resp.keypoints[5].position.y;
+      	document.getElementById("rightShoulder_x").innerHTML = resp.keypoints[6].position.x;
+      	document.getElementById("rightShoulder_y").innerHTML = resp.keypoints[6].position.y;
+      	document.getElementById("leftElbow_x").innerHTML = resp.keypoints[7].position.x;
+      	document.getElementById("leftElbow_y").innerHTML = resp.keypoints[7].position.y;
+      	document.getElementById("rightElbow_x").innerHTML = resp.keypoints[8].position.x;
+      	document.getElementById("rightElbow_y").innerHTML = resp.keypoints[8].position.y;
+      	document.getElementById("leftWrist_x").innerHTML = resp.keypoints[9].position.x;
+      	document.getElementById("leftWrist_y").innerHTML = resp.keypoints[9].position.y;
+      	document.getElementById("rightWrist_x").innerHTML = resp.keypoints[10].position.x;
+      	document.getElementById("rightWrist_y").innerHTML = resp.keypoints[10].position.y;
+      	document.getElementById("leftHip_x").innerHTML = resp.keypoints[11].position.x;
+      	document.getElementById("leftHip_y").innerHTML = resp.keypoints[11].position.y;
+      	document.getElementById("rightHip_x").innerHTML = resp.keypoints[12].position.x;
+      	document.getElementById("rightHip_y").innerHTML = resp.keypoints[12].position.y;
+      	document.getElementById("leftKnee_x").innerHTML = resp.keypoints[13].position.x;
+      	document.getElementById("leftKnee_y").innerHTML = resp.keypoints[13].position.y;
+      	document.getElementById("rightKnee_x").innerHTML = resp.keypoints[14].position.x;
+      	document.getElementById("rightKnee_y").innerHTML = resp.keypoints[14].position.y;
+      	document.getElementById("leftAnkle_x").innerHTML = resp.keypoints[15].position.x;
+      	document.getElementById("leftAnkle_y").innerHTML = resp.keypoints[15].position.y;
+      	document.getElementById("rightAnkle_x").innerHTML = resp.keypoints[16].position.x;
+      	document.getElementById("rightAnkle_y").innerHTML = resp.keypoints[16].position.y;
+
         position = JSON.stringify(resp)
         console.log(position);
         localStorage.position = localStorage.position + position;
@@ -115,18 +159,49 @@
 
 	  return video;
 	}
+	
 
-	function startStopVideo()  {
-	// starts and stops the video embedded in the 'video' element	
+	function loadLabels(video)	{
+	// loads the labels of a video into the 'label' array (with 100ms intervals)
+
+			d3.csv("videos/" + video + ".csv").then(function(data) {
+
+			var i;
+			for (i = 0; i < data.length; i++) { 
+			    label[i] = parseInt(data[i]["label"]);
+			}
+		  console.log(data);
+
+		});
 		
-	  var button = document.getElementById('video_button').firstChild;
-	  var video = document.getElementById('video');
-	  if(button.data == 'Get coordinates') {
-	  	button.data = 'Pause'
-			video.play();
-	  } else {
-	  	button.data = 'Get coordinates'
-			video.pause();
-	  }
-	  return video
+	}
+
+
+	function showLabel(interval) {
+	// displays the image (left, right etc.) corresponding to a label
+			
+		var img_src = 'stop.png';
+		
+		switch(label[interval]) {
+		    case 0: // stop
+		        img_src = 'stop.png';
+		        break;
+		    case 1: // left
+		        img_src = 'left.png';
+		        break;
+		    case 2: // right
+		        img_src = 'right.png';
+		        break;
+		    case 3: // up
+		        img_src = 'up.png';
+		        break;
+		    case 4: // down
+		        img_src = 'down.png';
+		        break;
+		    default:
+		        img_src = 'stop.png';
+		}		
+		
+		document.getElementById("label_display").src = "images/" + img_src;		
+		
 	}

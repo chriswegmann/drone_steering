@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible"
+        content="ie=edge">
+  <title>POSENET</title>
+  <script src="https://unpkg.com/@tensorflow/tfjs"></script>
+  <script src="https://unpkg.com/@tensorflow-models/posenet"></script>
+</head>
+
+<body>
+	
+<video id='video' src='videos/christian.mp4' width='800' height='600'></video><br>
+<button onclick='video.paused ? video.play() : video.pause()'>Play/Pause</button>
+
+<script>
+  var video = document.getElementById('video');
+  console.log(video.height);
+
+	const multiplier = 0.5;
+  const imageScaleFactor = 0.5;
+  const flipHorizontal = false;
+  const outputStride = 8;
+  let estimator = null;
+  
+  function compute(src) {
+
+    const imageElement = new Image();
+    imageElement.src = src;
+    imageElement.crossOrigin = "Anonymous"
+    imageElement.onload = () => {
+
+	    const canvas = document.createElement('canvas');
+	    const ctx = canvas.getContext('2d');
+	    canvas.width = imageElement.width;
+	    canvas.height = imageElement.height;
+	    ctx.drawImage(imageElement, 0, 0, canvas.width, canvas.height)
+	    // let imgdata = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	    let imgdata = document.getElementById('video');
+
+	    posenet
+	      .load(multiplier)
+	      .then(function(net) {
+	        if (!estimator) estimator = createEstimator(net);
+	        return estimator(imgdata, imageScaleFactor, flipHorizontal, outputStride)
+	      })
+	      .then((resp) => {
+	        console.log(JSON.stringify(resp));
+	      })
+    }
+  }
+
+  function createEstimator(net) {
+    return function (imageElement, scaleFactor, flipHorizontal, outputStride) {
+      return net.estimateSinglePose(imageElement, scaleFactor, flipHorizontal, outputStride);
+    }
+  }  
+
+  compute('images/woman.jpg')
+
+</script>
+</body>
+
+</html>

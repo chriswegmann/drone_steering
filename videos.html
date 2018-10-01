@@ -6,22 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Capturing coordinates with PoseNet</title>
+
+	<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+	<script src="https://d3js.org/d3-fetch.v1.min.js"></script>
   <script src="https://unpkg.com/@tensorflow/tfjs"></script>
   <script src="https://unpkg.com/@tensorflow-models/posenet"></script>
 	<script src="data_grabbing.js"></script>
 
-	<link href='http://fonts.googleapis.com/css?family=Lato&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+	<link href="https://fonts.googleapis.com/css?family=Bai+Jamjuree" rel="stylesheet">
+	<link rel="stylesheet" href="styles.css">
 
-	<style>
-	#video {
-	    width: 800px;
-	    height: 555px;
-	    background-color: #666;
-	}
-	table, td, th {
-    font-family: 'Lato', sans-serif;
-	}
-	</style>
 
 </head>
 
@@ -36,25 +30,36 @@
 				
 				<table width="100%">
 					<tr>
-						<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;">
-							<span style="font-family: 'Lato', sans-serif; font-size: 24pt">Videos</span><br>
+						<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;" height="40px" valign="bottom">
+							<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 24pt">Videos</span><br>
 						</td>
 					</tr>
 				</table>
 
 				<br>
 
-				<table width="100%">
-					<tr valign="top">
-						<td width="240px"><img src="images/load_labels.png" border="0"> <img src="images/store_features.png" border="0" onclick="get_coordinates_video()"></td>
-						<td><span style="font-family: 'Lato', sans-serif; font-size: 10pt">Labels not yet loaded.</span><br><br></td>
+				<table>
+					<tr>
+						<td valign="middle" width="160px">
+							<select id="selected_video">
+							  <option value="video_001">video_001</option>
+							  <option value="video_002">video_002</option>
+							  <option value="video_003">video_003</option>
+							  <option value="video_004">video_004</option>
+							</select>
+						</td>
+						<td width="300px" align="left">
+							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;" onClick="getCoordinatesVideo()">Load video</button>
+							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;">Load all videos</button>
+						</td>
 					</tr>
 				</table>
 				
 				<table>
 					<tr valign="top">
 						<td>
-							<video id='video' src='videos/christian.mp4' width='800' height='600'></video><br>
+							<video id="video" src="videos/christian.mp4" width="700" height="600"></video><br>
+							<!--<video id="video" src="videos/christian.mp4"></video><br>-->
 						</td>
 						<td width="50px"></td>
 						<td width="400px">
@@ -62,14 +67,14 @@
 							<table width="100%">
 								<tr>
 									<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;">
-										<span style="font-family: 'Lato', sans-serif; font-size: 16pt">Coordinates (=Features)</span><br>
+										<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 16pt">Coordinates (=Features)</span><br>
 									</td>
 								</tr>
 							</table>
 
 							<table style="border: none;">
-								<tr><td></td><td align="center">X</td><td align="center">Y</td></tr>
-								<tr style="background-color: #f2f2f2;"><td>nose</td><td><span id="nose_x">407.1560021602746</span></td><td><span id="nose_y">78.74384678653784</span></td></tr>
+								<tr><td></td><td align="center" width="180px">X</td><td align="center" width="180px">Y</td></tr>
+								<tr style="background-color: #f2f2f2;"><td>nose</td><td><span id="nose_x"></span></td><td><span id="nose_y"></span></td></tr>
 								<tr><td>leftEye</td><td><span id="leftEye_x"></span></td><td><span id="leftEye_y"></span></td></tr>
 								<tr style="background-color: #f2f2f2;"><td>rightEye</td><td><span id="rightEye_x"></span></td><td><span id="rightEye_y"></span></td></tr>
 								<tr><td>leftEar</td><td><span id="leftEar_x"></span></td><td><span id="leftEar_y"></span></td></tr>
@@ -100,13 +105,13 @@
 							<table width="100%">
 								<tr>
 									<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;">
-										<span style="font-family: 'Lato', sans-serif; font-size: 16pt">Direction (= Labels)</span><br>
+										<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 16pt">Direction (= Labels)</span><br>
 									</td>
 								</tr>
 								<tr>
 									<td align="center">
 										<br><br>
-										<img src="images/right.png">
+										<img id="label_display" src="images/stop.png">
 									</td>
 								</tr>
 							</table>
@@ -120,8 +125,6 @@
 			<td width="10%"></td>
 		</tr>
 	</table>
-
-
 
 </body>
 

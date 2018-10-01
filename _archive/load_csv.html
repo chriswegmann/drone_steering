@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Load data from CSV</title>
+
+</head>
+
+<body>
+
+<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+<script src="https://d3js.org/d3-fetch.v1.min.js"></script>
+
+	<p><span id="loaded_status"></span></p>
+	<p><span id="print"></span></p>
+
+	<button id="test_button" onclick="addLabels()">Add label</button>
+	
+	<script>
+		
+		var video_name = [];
+		var timestamp = [];
+		var label = [];
+		
+		d3.csv("data.csv").then(function(data) {
+			document.getElementById("loaded_status").innerHTML = "everything loaded";
+
+			var i;
+			for (i = 0; i < data.length; i++) { 
+			    video_name[i] = data[i]["video_name"];
+			    timestamp[i] = data[i]["timestamp"];
+			    label[i] = data[i]["label"];
+			}
+		  console.log(data);
+		});
+
+		function addLabels() {
+			var i;
+			var concatenated = "";
+			for (i = 0; i < timestamp.length; i++) { 
+			    concatenated = concatenated + timestamp[i];
+			}
+
+			document.getElementById("print").innerHTML = concatenated;
+		}
+
+			
+	</script>
+
+</body>
+
+</html>
+

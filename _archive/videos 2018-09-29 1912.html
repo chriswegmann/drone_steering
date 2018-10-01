@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Capturing coordinates with PoseNet</title>
+  <script src="https://unpkg.com/@tensorflow/tfjs"></script>
+  <script src="https://unpkg.com/@tensorflow-models/posenet"></script>
+	<script src="data_grabbing.js"></script>
+
+	<link href='http://fonts.googleapis.com/css?family=Lato&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+
+	<style>
+	#video {
+	    width: 800px;
+	    height: 555px;
+	    background-color: #666;
+	}
+	table, td, th {
+    font-family: 'Lato', sans-serif;
+	}
+	</style>
+
+</head>
+
+<body>
+
+	<br>
+
+	<table width="100%">
+		<tr valign="middle">
+			<td width="10%"></td>
+			<td width="80%">
+				
+				<table width="100%">
+					<tr>
+						<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;">
+							<span style="font-family: 'Lato', sans-serif; font-size: 24pt">Videos</span><br>
+						</td>
+					</tr>
+				</table>
+
+				<img src="images/load_labels.png" border="0"> <img src="images/store_features.png" border="0">
+				<span style="font-family: 'Lato', sans-serif; font-size: 10pt">Labels not yet loaded.</span><br><br>
+				
+				<table>
+					<tr valign="top">
+						<td>
+							<video id='video' src='videos/christian.mp4' width='800' height='600'></video><br>
+						</td>
+						<td width="50px"></td>
+						<td>
+
+							<table width="100%">
+								<tr>
+									<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;">
+										<span style="font-family: 'Lato', sans-serif; font-size: 16pt">Coordinates</span><br>
+									</td>
+								</tr>
+							</table>
+
+							<table style="border: none;">
+								<tr><td></td><td align="center">X</td><td align="center">Y</td></tr>
+								<tr style="background-color: #f2f2f2;"><td>nose</td><td><span id="nose_x">407.1560021602746</span></td><td><span id="nose_y">78.74384678653784</span></td></tr>
+								<tr><td>leftEye</td><td><span id="leftEye_x"></span></td><td><span id="leftEye_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td>rightEye</td><td><span id="rightEye_x"></span></td><td><span id="rightEye_y"></span></td></tr>
+								<tr><td>leftEar</td><td><span id="leftEar_x"></span></td><td><span id="leftEar_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td>rightEar</td><td><span id="rightEar_x"></span></td><td><span id="rightEar_y"></span></td></tr>
+								<tr><td>leftShoulder</td><td><span id="leftShoulder_x"></span></td><td><span id="leftShoulder_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td>rightShoulder</td><td><span id="rightShoulder_x"></span></td><td><span id="rightShoulder_y"></span></td></tr>
+								<tr><td>leftElbow</td><td><span id="leftElbow_x"></span></td><td><span id="leftElbow_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td>rightElbow</td><td><span id="rightElbow_x"></span></td><td><span id="rightElbow_y"></span></td></tr>
+								<tr><td>leftWrist</td><td><span id="leftWrist_x"></span></td><td><span id="leftWrist_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td>rightWrist</td><td><span id="rightWrist_x"></span></td><td><span id="rightWrist_y"></span></td></tr>
+								<tr><td>leftHip</td><td><span id="leftHip_x"></span></td><td><span id="leftHip_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td>rightHip</td><td><span id="rightHip_x"></span></td><td><span id="rightHip_y"></span></td></tr>
+								<tr><td>leftKnee</td><td><span id="leftKnee_x"></span></td><td><span id="leftKnee_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td>rightKnee</td><td><span id="rightKnee_x"></span></td><td><span id="rightKnee_y"></span></td></tr>
+								<tr><td>leftAnkle</td><td><span id="leftAnkle_x"></span></td><td><span id="leftAnkle_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td>rightAnkle</td><td><span id="rightAnkle_x"></span></td><td><span id="rightAnkle_y"></span></td></tr>
+								
+							</table>
+							
+							<p>We have stored the coordinates <span id="count">0</span> time(s).</p>
+
+						</td>
+						
+					</tr>					
+				</table>
+
+				<button id="video_button" onclick='get_coordinates_video()'>Get coordinates</button>
+
+
+				
+				
+				
+			</td>
+			<td width="10%"></td>
+		</tr>
+	</table>
+
+
+
+</body>
+
+</html>
