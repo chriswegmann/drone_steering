@@ -16,6 +16,13 @@
 	<link href="https://fonts.googleapis.com/css?family=Bai+Jamjuree" rel="stylesheet">
 	<link rel="stylesheet" href="styles.css">
 
+	<style>
+	#video {
+	    width: 640px;
+	    height: 480px;
+	    background-color: #666;
+	}
+	</style>
 
 </head>
 
@@ -27,30 +34,50 @@
 		<tr valign="middle">
 			<td width="10%"></td>
 			<td width="80%">
-				
-				<table width="100%">
+
+				<table width="100%" style="border-spacing: 0px;">
 					<tr>
-						<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;" height="40px" valign="bottom">
-							<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 24pt">Videos</span><br>
+						<td width="10" style="border-bottom: 1px solid #ddd;"></td>
+						<td style="border-top: 1px solid #ddd; border-left: 1px solid #ddd; border-right: 1px solid #ddd; text-align: center;" width="100px" height="30px" valign="middle">
+							<span style="font-family: 'Bai+Jamjuree', sans-serif;">Recordings</span><br>
 						</td>
+						<td width="10" style="border-bottom: 1px solid #ddd;"></td>
+						<td style="border: 1px solid #ddd; text-align: center; background-color: #f2f2f2;" width="100px" height="30px" valign="middle">
+							<a href="webcam.html" style="text-decoration: none; color: #000000;"><span style="font-family: 'Bai+Jamjuree', sans-serif;">Webcam</span></a><br>
+						</td>
+						<td style="border-bottom: 1px solid #ddd;"></td>
 					</tr>
 				</table>
 
 				<br>
 
+				<table width="100%">
+					<tr>
+						<td style="border-bottom: 1px solid #ddd;">
+							<span style="font-family: 'Bai+Jamjuree', sans-serif;">How to use?</span><br>
+						</td>
+					</tr>
+					<tr>
+						<td valign="center" style="border-bottom: 1px solid #ddd;">
+							Select a video in the dropdown and then click 'Load video'. This will extract the features in real-time. 
+							Once the video has finished click on 'Get features' to download them as input to your ML model.
+						</td>
+					</tr>
+				</table>				
+
+				<br>				
+								
 				<table>
 					<tr>
 						<td valign="middle" width="160px">
 							<select id="selected_video">
 							  <option value="video_001">video_001</option>
 							  <option value="video_002">video_002</option>
-							  <option value="video_003">video_003</option>
-							  <option value="video_004">video_004</option>
 							</select>
 						</td>
 						<td width="450px" align="left">
 							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;" onClick="getCoordinatesVideo()">Load video</button>
-							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;">Load all videos</button>
+							<!--<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;">Load all videos</button>-->
 							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;" onClick="getFeatures()">Get features</button>
 						</td>
 					</tr>
@@ -125,9 +152,11 @@
 			<td width="10%"></td>
 		</tr>
 		<tr>
-			<td colspan="3">
+			<td></td>
+			<td>
 				<p><span id="all_samples"></span></p>
 			</td>
+			<td></td>
 		</tr>
 	</table>
 

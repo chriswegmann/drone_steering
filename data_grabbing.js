@@ -22,10 +22,7 @@
 		video = document.getElementById('video');
 
 	  tid = setInterval(function() {
-	    if (i < 100) {
-	    	++i;
-	      getCoordSnapshot(video,0,'webcam');
-	    }
+	      getCoordSnapshot(video, 0, 'webcam');
 	  }, interval);
 
 	}
@@ -135,31 +132,70 @@
 	      }
 
       	if (sourceType=='webcam') {
-	      	var direction = 'stop.png'
+	      		
+	      		var direction = 'stop.png'
       		
-					if ((resp.keypoints[9].position.x - resp.keypoints[5].position.x) > 60) {
-						//var left_ind = 'detected (' + Math.round(resp.keypoints[9].position.x) + ' | ' + Math.round(resp.keypoints[5].position.x) + ')';
-						direction = 'left.png'
-					}
-					//else {
-						//var left_ind = Math.round(resp.keypoints[9].position.x) + ' | ' + Math.round(resp.keypoints[5].position.x);
-					//}
-					
-					if ((resp.keypoints[6].position.x - resp.keypoints[10].position.x) > 60) {
-						//var right_ind = 'detected (' + Math.round(resp.keypoints[6].position.x) + ' | ' + Math.round(resp.keypoints[10].position.x) + ')';
-						direction = 'right.png';
-					}
-					//else {
-						//var right_ind = Math.round(resp.keypoints[6].position.x) + ' | ' + Math.round(resp.keypoints[10].position.x);
-					//}
-					
-					document.getElementById("label_display").src = "images/" + direction;		
+           	var leftShoulder_x = Math.round(resp.keypoints[5].position.x);
+            var leftShoulder_y = Math.round(resp.keypoints[5].position.y);
+            var rightShoulder_x = Math.round(resp.keypoints[6].position.x);
+            var rightShoulder_y = Math.round(resp.keypoints[6].position.y);
+            var leftElbow_x = Math.round(resp.keypoints[7].position.x);
+            var leftElbow_y = Math.round(resp.keypoints[7].position.y);
+            var rightElbow_x = Math.round(resp.keypoints[8].position.x);
+            var rightElbow_y = Math.round(resp.keypoints[8].position.y);
+            var leftWrist_x = Math.round(resp.keypoints[9].position.x);
+            var leftWrist_y = Math.round(resp.keypoints[9].position.y);
+            var rightWrist_x = Math.round(resp.keypoints[10].position.x);
+            var rightWrist_y = Math.round(resp.keypoints[10].position.y);
+            
+            var leftArm_x = leftWrist_x - leftShoulder_x;
+            var rightArm_x = rightShoulder_x - rightWrist_x;
+            var leftArm_y = leftShoulder_y - leftWrist_y;
+            var rightArm_y = rightShoulder_y - rightWrist_y;
 
-	      	document.getElementById("stop_calc").innerHTML = '';
-	      	//document.getElementById("left_calc").innerHTML = left_ind;
-	      	//document.getElementById("right_calc").innerHTML = right_ind;
-	      	document.getElementById("up_calc").innerHTML = '';
-	      	document.getElementById("down_calc").innerHTML = '';
+            var left_ind = 'leftArm_x: ' + leftArm_x + '<br>leftWrist_x: ' + leftWrist_x + '<br>leftShoulder_x: ' + leftShoulder_x;
+            var right_ind = 'rightArm_x: ' + rightArm_x + '<br>rightWrist_x: ' + rightWrist_x + '<br>rightShoulder_x: ' + rightShoulder_x;
+						var stop_ind = left_ind + '<br>' + right_ind;
+						var up_ind = 'leftArm_y: ' + leftArm_y + '<br>leftWrist_y: ' + leftWrist_y + '<br>leftShoulder_y: ' + leftShoulder_y + '<br>rightArm_y: ' + rightArm_y + '<br>rightWrist_y: ' + rightWrist_y + '<br>rightShoulder_y: ' + rightShoulder_y;
+						var down_ind = up_ind;
+
+
+            if (leftArm_x > 60) {
+                    left_ind = 'detected<br>' + left_ind;
+                    direction = 'left.png'
+            }
+
+            if (rightArm_x > 60) {
+                    right_ind = 'detected<br>' + right_ind;
+                    direction = 'right.png';
+            }
+
+            if ((leftArm_x > 60) & (rightArm_x > 60)) {
+                    stop_ind = 'detected<br>' + stop_ind;
+                    direction = 'stop.png';
+            }
+
+
+            if ((leftArm_y > 100) & (rightArm_y > 100))  {
+                    up_ind = 'detected<br>' + up_ind;
+                    direction = 'up.png';
+            }
+
+            if ((leftArm_y < -100) & (rightArm_y < -100))  {
+                    down_ind = 'detected<br>' + down_ind;
+                    direction = 'down.png';
+            }
+
+
+
+            document.getElementById("label_display").src = "images/" + direction;           
+
+            document.getElementById("stop_calc").innerHTML = stop_ind;
+            document.getElementById("left_calc").innerHTML = left_ind;
+            document.getElementById("right_calc").innerHTML = right_ind;
+            document.getElementById("up_calc").innerHTML = up_ind;
+            document.getElementById("down_calc").innerHTML = down_ind;	
+	
       		
       	}
 

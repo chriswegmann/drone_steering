@@ -17,7 +17,15 @@
 
 	<link href="https://fonts.googleapis.com/css?family=Bai+Jamjuree" rel="stylesheet">
 	<link rel="stylesheet" href="styles.css">
-	  
+
+	<style>
+	#video {
+	    width: 640px;
+	    height: 444px;
+	    background-color: #666;
+	}
+	</style>
+
 </head>
 
 <body>
@@ -29,54 +37,47 @@
 			<td width="10%"></td>
 			<td width="80%">
 				
-				<table width="100%">
+				<table width="100%" style="border-spacing: 0px;">
 					<tr>
-						<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;" height="40px" valign="bottom">
-							<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 24pt">Webcam</span><br>
+						<td width="10" style="border-bottom: 1px solid #ddd;"></td>
+						<td style="border: 1px solid #ddd; text-align: center; background-color: #f2f2f2;" width="100px" height="30px" valign="middle">
+							<a href="videos.html" style="text-decoration: none; color: #000000;"><span style="font-family: 'Bai+Jamjuree', sans-serif;">Recordings</span></a><br>
 						</td>
+						<td width="10" style="border-bottom: 1px solid #ddd;"></td>
+						<td style="border-top: 1px solid #ddd; border-left: 1px solid #ddd; border-right: 1px solid #ddd; text-align: center;" width="100px" height="30px" valign="middle">
+							<span style="font-family: 'Bai+Jamjuree', sans-serif;">Webcam</span><br>
+						</td>
+						<td style="border-bottom: 1px solid #ddd;"></td>
 					</tr>
 				</table>
 
 				<br>
-	
-				<table>
+				
+				<table width="100%">
 					<tr>
-						<td width="450px" align="left">
-							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;" onClick="getCoordinatesWebcam()">Load webcam</button>
+						<td colspan="2" style="border-bottom: 1px solid #ddd;">
+							<span style="font-family: 'Bai+Jamjuree', sans-serif;">How to use?</span><br>
 						</td>
 					</tr>
-				</table>
-				
+					<tr>
+						<td valign="center" style="border-bottom: 1px solid #ddd;">
+							Move to a position where your webcam can see you in full size. Then move your arms as shown in the pictures on the right. The webcam will then automatically detect which movement you are doing.
+						</td>
+						<td align="center" style="border-bottom: 1px solid #ddd;">
+							<img src="images/summary.png">
+						</td>
+					</tr>
+				</table>				
+
 				<table>
 					<tr valign="top">
 						<td>
+							<br>
 							<div id="main">
 								<video id="video" playsinline="" style=" -moz-transform: scaleX(-1); -o-transform: scaleX(-1); -webkit-transform: scaleX(-1); transform: scaleX(-1);"></video>
 								<canvas id="output"></canvas>
 							</div>	
 						</td>
-						<td width="50px"></td>
-						<td width="400px">
-
-							<table width="100%">
-								<tr>
-									<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;">
-										<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 16pt">Direction (Debugging))</span><br>
-									</td>
-								</tr>
-							</table>
-
-							<table style="border: none;">
-								<tr><td></td><td align="center" width="180px"></td>
-								<tr style="background-color: #f2f2f2;"><td>stop</td><td><span id="stop_calc"></span></td>
-								<tr><td>left</td><td><span id="left_calc"></span></td>
-								<tr style="background-color: #f2f2f2;"><td>right</td><td><span id="right_calc"></span></td>
-								<tr><td>up</td><td><span id="up_calc"></span></td>
-								<tr style="background-color: #f2f2f2;"><td>down</td><td><span id="down_calc"></span></td>
-							</table>
-
-						</td>
-
 						<td width="50px"></td>
 						
 						<td width="400px">
@@ -93,6 +94,25 @@
 						
 					</tr>					
 				</table>
+
+				<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+				<table width="100%">
+					<tr>
+						<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;">
+							<span style="font-family: 'Bai+Jamjuree', sans-serif;">Debugging"</span><br>
+						</td>
+					</tr>
+				</table>
+				
+				<table style="border: none;">
+					<tr><td></td><td align="center" width="180px"></td>
+					<tr style="background-color: #f2f2f2;"><td>stop</td><td><span id="stop_calc"></span></td>
+					<tr><td>left</td><td><span id="left_calc"></span></td>
+					<tr style="background-color: #f2f2f2;"><td>right</td><td><span id="right_calc"></span></td>
+					<tr><td>up</td><td><span id="up_calc"></span></td>
+					<tr style="background-color: #f2f2f2;"><td>down</td><td><span id="down_calc"></span></td>
+				</table>
 				
 			</td>
 			<td width="10%"></td>
@@ -103,19 +123,6 @@
 			<td>
 
 				<br>
-				<table width="100%">
-					<tr>
-						<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;">
-							<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 16pt;">How to use?</span><br>
-						</td>
-					</tr>
-					<tr>
-						<td align="center">
-							<br><br>
-							<img src="images/summary.png">
-						</td>
-					</tr>
-				</table>
 
 
 			</td>
@@ -125,5 +132,9 @@
 	</table>
 
 </body>
+
+	<script>
+		getCoordinatesWebcam();
+	</script>
 
 </html>
