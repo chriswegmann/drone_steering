@@ -7,14 +7,33 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Capturing coordinates with PoseNet</title>
 
+  	<script>
+	import * as tf from '@tensorflow/tfjs';
+
+	//var imported = document.createElement('script');
+	//document.head.appendChild(imported);
+
+	//imported.onload = function(){
+	// Once the script has loaded tf should be available
+	// the rest of your program would need to be in this function
+	//const model = tf.loadModel('model_tfjs/model.json');
+	//var aTensor = tf.tensor1d([1,2,3]);
+	//};
+
+	// Start the loading process
+	//imported.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.6.1";
+
+	</script>
+
 	<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
 	<script src="https://d3js.org/d3-fetch.v1.min.js"></script>
-  <script src="https://unpkg.com/@tensorflow/tfjs"></script>
-  <script src="https://unpkg.com/@tensorflow-models/posenet"></script>
+  	<script src="https://unpkg.com/@tensorflow/tfjs"></script>
+  	<script src="https://unpkg.com/@tensorflow-models/posenet"></script>
 	<script src="data_grabbing.js"></script>
 
 	<link href="https://fonts.googleapis.com/css?family=Bai+Jamjuree" rel="stylesheet">
 	<link rel="stylesheet" href="styles.css">
+
 
 	<style>
 	#video {
@@ -38,16 +57,16 @@
 				<table width="100%" style="border-spacing: 0px;">
 					<tr>
 						<td width="10" style="border-bottom: 1px solid #ddd;"></td>
-						<td style="border-top: 1px solid #ddd; border-left: 1px solid #ddd; border-right: 1px solid #ddd; text-align: center;" width="100px" height="30px" valign="middle">
-							<span style="font-family: 'Bai+Jamjuree', sans-serif;">Recordings</span><br>
+						<td style="border: 1px solid #ddd; text-align: center; background-color: #f2f2f2;" width="100px" height="30px" valign="middle">
+							<a href="videos.html" style="text-decoration: none; color: #000000;"><span style="font-family: 'Bai+Jamjuree', sans-serif;">Recordings</span></a><br>
 						</td>
 						<td width="10" style="border-bottom: 1px solid #ddd;"></td>
 						<td style="border: 1px solid #ddd; text-align: center; background-color: #f2f2f2;" width="100px" height="30px" valign="middle">
 							<a href="webcam.html" style="text-decoration: none; color: #000000;"><span style="font-family: 'Bai+Jamjuree', sans-serif;">Webcam</span></a><br>
 						</td>
 						<td width="10" style="border-bottom: 1px solid #ddd;"></td>
-						<td style="border: 1px solid #ddd; text-align: center; background-color: #f2f2f2;" width="100px" height="30px" valign="middle">
-							<a href="keras.html" style="text-decoration: none; color: #000000;"><span style="font-family: 'Bai+Jamjuree', sans-serif;">Keras Model</span></a><br>
+						<td style="border-top: 1px solid #ddd; border-left: 1px solid #ddd; border-right: 1px solid #ddd; text-align: center;" width="100px" height="30px" valign="middle">
+							<span style="font-family: 'Bai+Jamjuree', sans-serif;">Keras Model</span><br>
 						</td>
 						<td style="border-bottom: 1px solid #ddd;"></td>
 					</tr>
@@ -63,8 +82,8 @@
 					</tr>
 					<tr>
 						<td valign="center" style="border-bottom: 1px solid #ddd;">
-							Select a video in the dropdown and then click 'Load video'. This will extract the features in real-time. 
-							Once the video has finished click on 'Get features' to download them as input to your ML model.
+							Select a video in the dropdown and then click 'Load video'. This will send the x/y coordinates to the Keras model and 
+							output the probabilities for the different poses in the right table.
 						</td>
 					</tr>
 				</table>				
@@ -80,9 +99,7 @@
 							</select>
 						</td>
 						<td width="450px" align="left">
-							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;" onClick="getCoordinatesVideo('preparation')">Load video</button>
-							<!--<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;">Load all videos</button>-->
-							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;" onClick="getFeatures()">Get features</button>
+							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;" onClick="getCoordinatesVideo('predict')">Load video</button>
 						</td>
 					</tr>
 				</table>
@@ -98,7 +115,7 @@
 							<table width="100%">
 								<tr>
 									<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;">
-										<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 16pt">Coordinates (=Features)</span><br>
+										<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 16pt">Coordinates</span><br>
 									</td>
 								</tr>
 							</table>
@@ -136,13 +153,22 @@
 							<table width="100%">
 								<tr>
 									<td style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;">
-										<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 16pt">Direction (= Labels)</span><br>
+										<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 16pt">Labels from Keras Model</span><br>
 									</td>
 								</tr>
 								<tr>
 									<td align="center">
-										<br><br>
-										<img id="label_display" src="images/stop.png">
+
+										<table style="border: none;">
+											<tr><td width="100px"></td><td align="center" width="180px">Probability</td></tr>
+											<tr style="background-color: #f2f2f2;"><td>stop</td><td><span id="stop"></span></td></tr>
+											<tr><td>left</td><td><span id="left"></span></td></tr>
+											<tr style="background-color: #f2f2f2;"><td>right</td><td><span id="right"></span></td></tr>
+											<tr><td>up</td><td><span id="up"></span></td></tr>
+											<tr style="background-color: #f2f2f2;"><td>down</td><td><span id="down"></span></td></tr>
+											
+										</table>
+
 									</td>
 								</tr>
 							</table>

@@ -28,7 +28,7 @@
 	}
 
 
-	function getCoordinatesVideo() {
+	function getCoordinatesVideo(purpose) {
 	// runs the video and gets the coordinates for each snapshot of a time interval as long as the video is running
 
 		var i = 0;
@@ -46,7 +46,7 @@
 	  tid = setInterval(function() {
 	    if (!video.ended && !video.paused) {
 	      document.getElementById('count').innerHTML = i;
-	      getCoordSnapshot(video,i,'video');
+	      getCoordSnapshot(video, i, 'video', purpose);
 	      showLabel(i);
 	    	++i;
 	    }
@@ -58,9 +58,8 @@
 	}
   
   
-  function getCoordSnapshot(imgData,label_index,sourceType) {
-	// gets to coordinates of imgData at the given time and stores it locally in a log file. This log file is available under
-	// C:\Users\Christian\AppData\Local\Google\Chrome\User Data\Default\Local Storage\leveldb
+  function getCoordSnapshot(imgData, labelIndex, sourceType, purpose='none') {
+	// gets to coordinates of imgData at the given time and store or display the information
 	
     posenet
       .load(multiplier)
@@ -107,28 +106,58 @@
 	      	document.getElementById("rightAnkle_x").innerHTML = resp.keypoints[16].position.x;
 	      	document.getElementById("rightAnkle_y").innerHTML = resp.keypoints[16].position.y;
 
+					sample[0] = Math.round(resp.keypoints[5].position.x, 0) / 800;
+					sample[1] = Math.round(resp.keypoints[5].position.y, 0) / 800;
+					sample[2] = Math.round(resp.keypoints[6].position.x, 0) / 800;
+					sample[3] = Math.round(resp.keypoints[6].position.y, 0) / 800;
+					sample[4] = Math.round(resp.keypoints[7].position.x, 0) / 800;
+					sample[5] = Math.round(resp.keypoints[7].position.y, 0) / 800;
+					sample[6] = Math.round(resp.keypoints[8].position.x, 0) / 800;
+					sample[7] = Math.round(resp.keypoints[8].position.y, 0) / 800;
+					sample[8] = Math.round(resp.keypoints[9].position.x, 0) / 800;
+					sample[9] = Math.round(resp.keypoints[9].position.y, 0) / 800;
+					sample[10] = Math.round(resp.keypoints[10].position.x, 0) / 800;
+					sample[11] = Math.round(resp.keypoints[10].position.y, 0) / 800;
+
+					if (purpose='preparation') {
+
+						sample[12] = label[labelIndex];
+						
+	
+						sample_json = JSON.stringify(sample);
+						all_samples_json = all_samples_json + sample_json;
+	
+						// store the coordinates locally in a log file (available under C:\Users\Christian\AppData\Local\Google\Chrome\User Data\Default\Local Storage\leveldb)
+						//position = JSON.stringify(resp);
+						//console.log(position);
+						//localStorage.position = localStorage.position + position;
+					}
+
+					else {
+
+						//var imported = document.createElement('script');
+						//document.head.appendChild(imported);
 					
-	      	sample[0] = Math.round(resp.keypoints[5].position.x, 0);
-	      	sample[1] = Math.round(resp.keypoints[5].position.y, 0);
-	      	sample[2] = Math.round(resp.keypoints[6].position.x, 0);
-	      	sample[3] = Math.round(resp.keypoints[6].position.y, 0);
-	      	sample[4] = Math.round(resp.keypoints[7].position.x, 0);
-	      	sample[5] = Math.round(resp.keypoints[7].position.y, 0);
-	      	sample[6] = Math.round(resp.keypoints[8].position.x, 0);
-	      	sample[7] = Math.round(resp.keypoints[8].position.y, 0);
-	      	sample[8] = Math.round(resp.keypoints[9].position.x, 0);
-	      	sample[9] = Math.round(resp.keypoints[9].position.y, 0);
-	      	sample[10] = Math.round(resp.keypoints[10].position.x, 0);
-	      	sample[11] = Math.round(resp.keypoints[10].position.y, 0);
-	      	sample[12] = label[label_index];
-	      	
+						//imported.onload = function(){
+						// Once the script has loaded tf should be available
+						// the rest of your program would need to be in this function
+							//const model = tf.loadModel('model_tfjs/model.json');
+							//const prediction = model.predict(sample);
+							//console.log(prediction);
+						//};
+					
+						// Start the loading process
+						//imported.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.6.1";
+					
+						//import * as tf from '@tensorflow/tfjs';
+						//const model = await tf.loadModel('model_tfjs/model.json');
 
-	        sample_json = JSON.stringify(sample);
-	        all_samples_json = all_samples_json + sample_json;
+						//const prediction = model.predict(sample);
 
-	        //position = JSON.stringify(resp);
-	        //console.log(position);
-	        //localStorage.position = localStorage.position + position;
+						//console.log(prediction);
+
+					}
+					
 	      }
 
       	if (sourceType=='webcam') {
