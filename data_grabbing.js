@@ -40,6 +40,10 @@
 
 	  loadLabels(video_name);
 
+		if (purpose=='predict') {
+			const model = tf.loadModel('model_tfjs/model.json');
+		}
+
 	  video.src = 'videos/' + video_name + '.mp4';
 		video.play();
 
@@ -135,26 +139,8 @@
 
 					else {
 
-						//var imported = document.createElement('script');
-						//document.head.appendChild(imported);
-					
-						//imported.onload = function(){
-						// Once the script has loaded tf should be available
-						// the rest of your program would need to be in this function
-							//const model = tf.loadModel('model_tfjs/model.json');
-							//const prediction = model.predict(sample);
-							//console.log(prediction);
-						//};
-					
-						// Start the loading process
-						//imported.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.6.1";
-					
-						//import * as tf from '@tensorflow/tfjs';
-						//const model = await tf.loadModel('model_tfjs/model.json');
-
-						//const prediction = model.predict(sample);
-
-						//console.log(prediction);
+						const prediction = model.predict(sample);
+						console.log(prediction);
 
 					}
 					
