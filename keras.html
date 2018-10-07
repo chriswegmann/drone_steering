@@ -7,24 +7,6 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Capturing coordinates with PoseNet</title>
 
-  	<script>
-	import * as tf from '@tensorflow/tfjs';
-
-	//var imported = document.createElement('script');
-	//document.head.appendChild(imported);
-
-	//imported.onload = function(){
-	// Once the script has loaded tf should be available
-	// the rest of your program would need to be in this function
-	//const model = tf.loadModel('model_tfjs/model.json');
-	//var aTensor = tf.tensor1d([1,2,3]);
-	//};
-
-	// Start the loading process
-	//imported.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.6.1";
-
-	</script>
-
 	<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
 	<script src="https://d3js.org/d3-fetch.v1.min.js"></script>
   	<script src="https://unpkg.com/@tensorflow/tfjs"></script>
@@ -34,6 +16,12 @@
 	<link href="https://fonts.googleapis.com/css?family=Bai+Jamjuree" rel="stylesheet">
 	<link rel="stylesheet" href="styles.css">
 
+	<script>
+	
+	const model = tf.loadModel('model_tfjs/model.json');
+	
+	</script>
+	
 
 	<style>
 	#video {
