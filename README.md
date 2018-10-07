@@ -18,3 +18,16 @@ In essence, we structure the tool technically as follows:
 * The steering module then transmits the commands through wifi to the drone.
 
 We use pre-recorded videos with labels to generate training data. We then build and train the model in Python using Keras. Once trained, we embed this model in the JavaScript application (see [here](https://js.tensorflow.org/tutorials/import-saved-model.html) for how to do this).
+
+
+### Todos
+* Make Keras model work in tensorflow.js
+* Research drone models (criteria: easy to steer / access video from computer)
+* Generate training data for model for existing postures (stop, up, down, left, right)
+* Train model such that it detects existing postures reliably
+* Research about streaming machine learning and what the requirements are
+  * How does a model detect sequences in a stream?
+  * Does Keras support streaming ML?
+  * How can we feed a stream as input to the model?
+* Generate training data for streaming model
+* Train streaming model
