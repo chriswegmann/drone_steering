@@ -51,7 +51,9 @@
 	    if (!video.ended && !video.paused) {
 	      document.getElementById('count').innerHTML = i;
 	      getCoordSnapshot(video, i, 'video', purpose);
-	      showLabel(i);
+	      if (purpose='preparation') {
+					showLabel(i);
+				}
 	    	++i;
 	    }
 	  }, interval);
