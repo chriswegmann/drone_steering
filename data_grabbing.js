@@ -125,7 +125,7 @@
 					sample[10] = Math.round(resp.keypoints[10].position.x, 0) / 800;
 					sample[11] = Math.round(resp.keypoints[10].position.y, 0) / 800;
 
-					if (purpose='preparation') {
+					if (purpose=='preparation') {
 
 						sample[12] = label[labelIndex];
 						
