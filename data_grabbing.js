@@ -16,29 +16,24 @@
 	// test loaded model
 	//const model = await tf.loadModel('model_tfjs/model.json');
 	
-	//sample = new Array(1)
-	//sample[0] = new Array(12)
+	sample = new Array(1)
+	sample[0] = new Array(12)
 
-	sample[0][0] = 0.2;
-	sample[0][1] = 0.4;
-	sample[0][2] = 0.3;
-	sample[0][3] = 0.6;
-	sample[0][4] = 0.1;
-	sample[0][5] = 0.2;
-	sample[0][6] = 0.7;
-	sample[0][7] = 0.3;
-	sample[0][8] = 0.6;
-	sample[0][9] = 0.8;
-	sample[0][10] = 0.4;
-	sample[0][11] = 0.2;
-
-	//sample_tensor = tf.tensor(sample);
-	//const prediction = model.predict(sample_tensor);
-	//console.log(prediction);
+	//sample[0][0] = 0.2;
+	//sample[0][1] = 0.4;
+	//sample[0][2] = 0.3;
+	//sample[0][3] = 0.6;
+	//sample[0][4] = 0.1;
+	//sample[0][5] = 0.2;
+	//sample[0][6] = 0.7;
+	//sample[0][7] = 0.3;
+	//sample[0][8] = 0.6;
+	//sample[0][9] = 0.8;
+	//sample[0][10] = 0.4;
+	//sample[0][11] = 0.2;
 
 
 	async function predictFromModel(sample)	{
-			//console.log('response: ', response);
 
 			sample_tensor = tf.tensor(sample);
 
@@ -55,7 +50,7 @@
 
 	}
 
-	predictFromModel(sample);
+	//predictFromModel(sample);
 
 
 
@@ -192,10 +187,25 @@
 					}
 
 					else {
-						sample_tensor = tf.tensor(sample);
-						const prediction = model.predict(sample_tensor);
-						console.log(prediction);
 
+						sample_predict = new Array(1)
+						sample_predict[0] = new Array(12)
+					
+						sample_predict[0][0] = Math.round(resp.keypoints[5].position.x, 0) / 800;
+						sample_predict[0][1] = Math.round(resp.keypoints[5].position.y, 0) / 800;
+						sample_predict[0][2] = Math.round(resp.keypoints[6].position.x, 0) / 800;
+						sample_predict[0][3] = Math.round(resp.keypoints[6].position.y, 0) / 800;
+						sample_predict[0][4] = Math.round(resp.keypoints[7].position.x, 0) / 800;
+						sample_predict[0][5] = Math.round(resp.keypoints[7].position.y, 0) / 800;
+						sample_predict[0][6] = Math.round(resp.keypoints[8].position.x, 0) / 800;
+						sample_predict[0][7] = Math.round(resp.keypoints[8].position.y, 0) / 800;
+						sample_predict[0][8] = Math.round(resp.keypoints[9].position.x, 0) / 800;
+						sample_predict[0][9] = Math.round(resp.keypoints[9].position.y, 0) / 800;
+						sample_predict[0][10] = Math.round(resp.keypoints[10].position.x, 0) / 800;
+						sample_predict[0][11] = Math.round(resp.keypoints[10].position.y, 0) / 800;						
+
+						predictFromModel(sample_predict);
+						
 					}
 					
 	      }
