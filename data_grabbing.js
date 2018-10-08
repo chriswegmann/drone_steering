@@ -14,7 +14,7 @@
 	var all_samples_json = '';
 
 	// test loaded model
-	const model = tf.loadModel('model_tfjs/model.json');
+	const model = await tf.loadModel('model_tfjs/model.json');
 	sample[0] = 0.2;
 	sample[1] = 0.4;
 	sample[2] = 0.3;
@@ -31,6 +31,24 @@
 	sample_tensor = tf.tensor(sample);
 	const prediction = model.predict(sample_tensor);
 	console.log(prediction);
+
+
+	//var a = (form.input1.value);
+	//$.post('http://127.0.0.1:5000/',{"text":a}, async function(response)
+	//{
+	//		console.log('response: ',response);
+	//		var arr=response;
+	//		const model= await tf.loadModel('./json/model.json');
+	//		console.log(model.predict(arr))
+	//});
+
+
+
+
+
+
+
+
 
 
 	function getCoordinatesWebcam() {
