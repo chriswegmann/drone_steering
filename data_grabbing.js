@@ -14,7 +14,7 @@
 	var all_samples_json = '';
 
 
-	function getCoordinatesWebcam() {
+	function getCoordinatesWebcam(modelType) {
 	// gets the coordinates for each snapshot of the webcam
 
 		var i = 0;
@@ -24,13 +24,13 @@
 		video = document.getElementById('video');
 
 	  tid = setInterval(function() {
-	      getCoordSnapshot(video, 0, 'webcam');
+	      getCoordSnapshot(video, 0, 'webcam', modelType);
 	  }, interval);
 
 	}
 
 
-	function getCoordinatesVideo(purpose) {
+	function getCoordinatesVideo() {
 	// runs the video and gets the coordinates for each snapshot of a time interval as long as the video is running
 
 		var i = 0;
@@ -52,7 +52,7 @@
 	  tid = setInterval(function() {
 	    if (!video.ended && !video.paused) {
 	      document.getElementById('count').innerHTML = i;
-	      getCoordSnapshot(video, i, 'video', purpose);
+	      getCoordSnapshot(video, i, 'video');
 	      if (purpose=='preparation') {
 					showLabel(i);
 				}
@@ -66,7 +66,7 @@
 	}
   
   
-  function getCoordSnapshot(imgData, labelIndex, sourceType, purpose='none') {
+  function getCoord Snapshot(imgData, labelIndex, sourceType, modelType='none') {
 	// gets to coordinates of imgData at the given time and store or display the information
 	
     posenet
@@ -114,62 +114,33 @@
 	      	document.getElementById("rightAnkle_x").innerHTML = resp.keypoints[16].position.x;
 	      	document.getElementById("rightAnkle_y").innerHTML = resp.keypoints[16].position.y;
 
-					//sample[0] = Math.round(resp.keypoints[5].position.x, 0) / 800;
-					//sample[1] = Math.round(resp.keypoints[5].position.y, 0) / 800;
-					//sample[2] = Math.round(resp.keypoints[6].position.x, 0) / 800;
-					//sample[3] = Math.round(resp.keypoints[6].position.y, 0) / 800;
-					//sample[4] = Math.round(resp.keypoints[7].position.x, 0) / 800;
-					//sample[5] = Math.round(resp.keypoints[7].position.y, 0) / 800;
-					//sample[6] = Math.round(resp.keypoints[8].position.x, 0) / 800;
-					//sample[7] = Math.round(resp.keypoints[8].position.y, 0) / 800;
-					//sample[8] = Math.round(resp.keypoints[9].position.x, 0) / 800;
-					//sample[9] = Math.round(resp.keypoints[9].position.y, 0) / 800;
-					//sample[10] = Math.round(resp.keypoints[10].position.x, 0) / 800;
-					//sample[11] = Math.round(resp.keypoints[10].position.y, 0) / 800;
+					sample[0] = Math.round(resp.keypoints[5].position.x, 0) / 800;
+					sample[1] = Math.round(resp.keypoints[5].position.y, 0) / 800;
+					sample[2] = Math.round(resp.keypoints[6].position.x, 0) / 800;
+					sample[3] = Math.round(resp.keypoints[6].position.y, 0) / 800;
+					sample[4] = Math.round(resp.keypoints[7].position.x, 0) / 800;
+					sample[5] = Math.round(resp.keypoints[7].position.y, 0) / 800;
+					sample[6] = Math.round(resp.keypoints[8].position.x, 0) / 800;
+					sample[7] = Math.round(resp.keypoints[8].position.y, 0) / 800;
+					sample[8] = Math.round(resp.keypoints[9].position.x, 0) / 800;
+					sample[9] = Math.round(resp.keypoints[9].position.y, 0) / 800;
+					sample[10] = Math.round(resp.keypoints[10].position.x, 0) / 800;
+					sample[11] = Math.round(resp.keypoints[10].position.y, 0) / 800;
 
-					sample_predict = new Array(1)
-					sample_predict[0] = new Array(12)
-				
-					sample_predict[0][0] = Math.round(resp.keypoints[5].position.x, 0) / 800;
-					sample_predict[0][1] = Math.round(resp.keypoints[5].position.y, 0) / 800;
-					sample_predict[0][2] = Math.round(resp.keypoints[6].position.x, 0) / 800;
-					sample_predict[0][3] = Math.round(resp.keypoints[6].position.y, 0) / 800;
-					sample_predict[0][4] = Math.round(resp.keypoints[7].position.x, 0) / 800;
-					sample_predict[0][5] = Math.round(resp.keypoints[7].position.y, 0) / 800;
-					sample_predict[0][6] = Math.round(resp.keypoints[8].position.x, 0) / 800;
-					sample_predict[0][7] = Math.round(resp.keypoints[8].position.y, 0) / 800;
-					sample_predict[0][8] = Math.round(resp.keypoints[9].position.x, 0) / 800;
-					sample_predict[0][9] = Math.round(resp.keypoints[9].position.y, 0) / 800;
-					sample_predict[0][10] = Math.round(resp.keypoints[10].position.x, 0) / 800;
-					sample_predict[0][11] = Math.round(resp.keypoints[10].position.y, 0) / 800;
-
-
-					if (purpose=='preparation') {
-
-						sample_with_label = sample_predict[0]
-						sample_with_label[12] = label[labelIndex];
+					sample[12] = label[labelIndex];
 						
+					sample_json = JSON.stringify(sample_with_label);
+					all_samples_json = all_samples_json + sample_json;
 	
-						sample_json = JSON.stringify(sample_with_label);
-						all_samples_json = all_samples_json + sample_json;
-	
-						// store the coordinates locally in a log file (available under C:\Users\Christian\AppData\Local\Google\Chrome\User Data\Default\Local Storage\leveldb)
-						//position = JSON.stringify(resp);
-						//console.log(position);
-						//localStorage.position = localStorage.position + position;
-					}
+					// store the coordinates locally in a log file (available under C:\Users\Christian\AppData\Local\Google\Chrome\User Data\Default\Local Storage\leveldb)
+					//position = JSON.stringify(resp);
+					//console.log(position);
+					//localStorage.position = localStorage.position + position;
 
-					else {
-
-
-						predictFromModel(sample_predict);
-						
-					}
-					
 	      }
 
       	if (sourceType=='webcam') {
-	      		
+						
 	      		var direction = 'stop.png'
       		
            	var leftShoulder_x = Math.round(resp.keypoints[5].position.x);
@@ -184,53 +155,79 @@
             var leftWrist_y = Math.round(resp.keypoints[9].position.y);
             var rightWrist_x = Math.round(resp.keypoints[10].position.x);
             var rightWrist_y = Math.round(resp.keypoints[10].position.y);
-            
-            var leftArm_x = leftWrist_x - leftShoulder_x;
-            var rightArm_x = rightShoulder_x - rightWrist_x;
-            var leftArm_y = leftShoulder_y - leftWrist_y;
-            var rightArm_y = rightShoulder_y - rightWrist_y;
 
-            var left_ind = 'leftArm_x: ' + leftArm_x + '<br>leftWrist_x: ' + leftWrist_x + '<br>leftShoulder_x: ' + leftShoulder_x;
-            var right_ind = 'rightArm_x: ' + rightArm_x + '<br>rightWrist_x: ' + rightWrist_x + '<br>rightShoulder_x: ' + rightShoulder_x;
-						var stop_ind = left_ind + '<br>' + right_ind;
-						var up_ind = 'leftArm_y: ' + leftArm_y + '<br>leftWrist_y: ' + leftWrist_y + '<br>leftShoulder_y: ' + leftShoulder_y + '<br>rightArm_y: ' + rightArm_y + '<br>rightWrist_y: ' + rightWrist_y + '<br>rightShoulder_y: ' + rightShoulder_y;
-						var down_ind = up_ind;
+						if (modelType=='deltas') {
 
-
-            if (leftArm_x > 60) {
-                    left_ind = 'detected<br>' + left_ind;
-                    direction = 'left.png'
-            }
-
-            if (rightArm_x > 60) {
-                    right_ind = 'detected<br>' + right_ind;
-                    direction = 'right.png';
-            }
-
-            if ((leftArm_x > 60) & (rightArm_x > 60)) {
-                    stop_ind = 'detected<br>' + stop_ind;
-                    direction = 'stop.png';
-            }
-
-
-            if ((leftArm_y > 100) & (rightArm_y > 100))  {
-                    up_ind = 'detected<br>' + up_ind;
-                    direction = 'up.png';
-            }
-
-            if ((leftArm_y < -100) & (rightArm_y < -100))  {
-                    down_ind = 'detected<br>' + down_ind;
-                    direction = 'down.png';
-            }
-
-            document.getElementById("label_display").src = "images/" + direction;           
-
-            document.getElementById("stop_calc").innerHTML = stop_ind;
-            document.getElementById("left_calc").innerHTML = left_ind;
-            document.getElementById("right_calc").innerHTML = right_ind;
-            document.getElementById("up_calc").innerHTML = up_ind;
-            document.getElementById("down_calc").innerHTML = down_ind;	
+							var leftArm_x = leftWrist_x - leftShoulder_x;
+							var rightArm_x = rightShoulder_x - rightWrist_x;
+							var leftArm_y = leftShoulder_y - leftWrist_y;
+							var rightArm_y = rightShoulder_y - rightWrist_y;
 	
+							var left_ind = 'leftArm_x: ' + leftArm_x + '<br>leftWrist_x: ' + leftWrist_x + '<br>leftShoulder_x: ' + leftShoulder_x;
+							var right_ind = 'rightArm_x: ' + rightArm_x + '<br>rightWrist_x: ' + rightWrist_x + '<br>rightShoulder_x: ' + rightShoulder_x;
+							var stop_ind = left_ind + '<br>' + right_ind;
+							var up_ind = 'leftArm_y: ' + leftArm_y + '<br>leftWrist_y: ' + leftWrist_y + '<br>leftShoulder_y: ' + leftShoulder_y + '<br>rightArm_y: ' + rightArm_y + '<br>rightWrist_y: ' + rightWrist_y + '<br>rightShoulder_y: ' + rightShoulder_y;
+							var down_ind = up_ind;
+	
+	
+							if (leftArm_x > 60) {
+											left_ind = 'detected<br>' + left_ind;
+											direction = 'left.png'
+							}
+	
+							if (rightArm_x > 60) {
+											right_ind = 'detected<br>' + right_ind;
+											direction = 'right.png';
+							}
+	
+							if ((leftArm_x > 60) & (rightArm_x > 60)) {
+											stop_ind = 'detected<br>' + stop_ind;
+											direction = 'stop.png';
+							}
+	
+	
+							if ((leftArm_y > 100) & (rightArm_y > 100))  {
+											up_ind = 'detected<br>' + up_ind;
+											direction = 'up.png';
+							}
+	
+							if ((leftArm_y < -100) & (rightArm_y < -100))  {
+											down_ind = 'detected<br>' + down_ind;
+											direction = 'down.png';
+							}
+	
+							document.getElementById("label_display").src = "images/" + direction;           
+	
+							document.getElementById("stop_calc").innerHTML = stop_ind;
+							document.getElementById("left_calc").innerHTML = left_ind;
+							document.getElementById("right_calc").innerHTML = right_ind;
+							document.getElementById("up_calc").innerHTML = up_ind;
+							document.getElementById("down_calc").innerHTML = down_ind;	
+
+						}
+
+	
+						if (modelType=='postures') {
+
+							sample_predict = new Array(1)
+							sample_predict[0] = new Array(12)
+
+							sample_predict[0][0] = leftShoulder_x;
+							sample_predict[0][1] = leftShoulder_y;
+							sample_predict[0][2] = rightShoulder_x;
+							sample_predict[0][3] = rightShoulder_y;
+							sample_predict[0][4] = leftElbow_x;
+							sample_predict[0][5] = leftElbow_y;
+							sample_predict[0][6] = rightElbow_x;
+							sample_predict[0][7] = rightElbow_y;
+							sample_predict[0][8] = leftWrist_x;
+							sample_predict[0][9] = leftWrist_y;
+							sample_predict[0][10] = rightWrist_x;
+							sample_predict[0][11] = rightWrist_y;
+
+							predictFromModel(sample_predict);
+							
+						}
       		
       	}
 

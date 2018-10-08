@@ -40,16 +40,32 @@
 				<table width="100%" style="border-spacing: 0px;">
 					<tr>
 						<td width="10" style="border-bottom: 1px solid #ddd;"></td>
-						<td style="border: 1px solid #ddd; text-align: center; background-color: #f2f2f2;" width="100px" height="30px" valign="middle">
-							<a href="videos.html" style="text-decoration: none; color: #000000;"><span style="font-family: 'Bai+Jamjuree', sans-serif;">Recordings</span></a><br>
+						<td style="border: 1px solid #ddd; text-align: center; background-color: #f2f2f2;" width="180px" height="30px" valign="middle">
+							<a href="train_model.html" style="text-decoration: none; color: #000000;"><span style="font-family: 'Bai+Jamjuree', sans-serif;">Generate Training Data</span></a><br>
 						</td>
 						<td width="10" style="border-bottom: 1px solid #ddd;"></td>
-						<td style="border-top: 1px solid #ddd; border-left: 1px solid #ddd; border-right: 1px solid #ddd; text-align: center;" width="100px" height="30px" valign="middle">
-							<span style="font-family: 'Bai+Jamjuree', sans-serif;">Webcam</span><br>
+						<td style="border-top: 1px solid #ddd; border-left: 1px solid #ddd; border-right: 1px solid #ddd; text-align: center;" width="150px" height="30px" valign="middle">
+							<span style="font-family: 'Bai+Jamjuree', sans-serif;">Predict Movements</span><br>
+						</td>
+						<td style="border-bottom: 1px solid #ddd;"></td>
+					</tr>
+				</table>
+
+				<br><br>
+
+				<table width="100%" style="border-spacing: 0px;">
+					<tr>
+						<td width="10" style="border-bottom: 1px solid #ddd;"></td>
+						<td style="border-top: 1px solid #ddd; border-left: 1px solid #ddd; border-right: 1px solid #ddd; text-align: center;" width="100px" height="23px" valign="middle">
+							<span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 11pt;">Deltas</span><br>
 						</td>
 						<td width="10" style="border-bottom: 1px solid #ddd;"></td>
-						<td style="border: 1px solid #ddd; text-align: center; background-color: #f2f2f2;" width="100px" height="30px" valign="middle">
-							<a href="keras.html" style="text-decoration: none; color: #000000;"><span style="font-family: 'Bai+Jamjuree', sans-serif;">Keras Model</span></a><br>
+						<td style="border: 1px solid #ddd; text-align: center; background-color: #f2f2f2;" width="100px" valign="middle">
+							<a href="predict_postures.html" style="text-decoration: none; color: #000000;"><span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 11pt;">Postures</span></a><br>
+						</td>
+						<td width="10" style="border-bottom: 1px solid #ddd;"></td>
+						<td style="border: 1px solid #ddd; text-align: center; background-color: #f2f2f2;" width="100px" valign="middle">
+							<a href="predict_gestures.html" style="text-decoration: none; color: #000000;"><span style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 11pt;">Gestures</span></a><br>
 						</td>
 						<td style="border-bottom: 1px solid #ddd;"></td>
 					</tr>
@@ -137,8 +153,8 @@
 
 </body>
 
-	<script>
-		getCoordinatesWebcam();
-	</script>
+<script>
+	getCoordinatesWebcam('deltas');
+</script>
 
 </html>
