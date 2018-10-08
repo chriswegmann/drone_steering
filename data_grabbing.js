@@ -42,10 +42,6 @@
 
 	  loadLabels(video_name);
 
-		//if (purpose=='predict') {
-		//	const model = tf.loadModel('model_tfjs/model.json');
-		//}
-
 	  video.src = 'videos/' + video_name + '.mp4';
 		video.play();
 
@@ -53,9 +49,7 @@
 	    if (!video.ended && !video.paused) {
 	      document.getElementById('count').innerHTML = i;
 	      getCoordSnapshot(video, i, 'video');
-	      //if (purpose=='preparation') {
-					showLabel(i);
-				//}
+				showLabel(i);
 	    	++i;
 	    }
 	  }, interval);
@@ -129,7 +123,7 @@
 
 					sample[12] = label[labelIndex];
 						
-					sample_json = JSON.stringify(sample_with_label);
+					sample_json = JSON.stringify(sample);
 					all_samples_json = all_samples_json + sample_json;
 	
 					// store the coordinates locally in a log file (available under C:\Users\Christian\AppData\Local\Google\Chrome\User Data\Default\Local Storage\leveldb)
