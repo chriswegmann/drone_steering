@@ -16,8 +16,8 @@
 	// test loaded model
 	//const model = await tf.loadModel('model_tfjs/model.json');
 	
-	sample = new Array(1)
-	sample[0] = new Array(12)
+	//sample = new Array(1)
+	//sample[0] = new Array(12)
 
 	sample[0][0] = 0.2;
 	sample[0][1] = 0.4;
