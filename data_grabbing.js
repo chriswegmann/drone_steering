@@ -361,11 +361,12 @@
 	function getFeatures() {
 	// dumps all samples (features and label) at the bottom of the page
 		
+		/*
 		var all_samples_csv = all_samples_json.replace(/\]\[/g,'<br>')
 		all_samples_csv = all_samples_csv.replace('[','')
 		all_samples_csv = all_samples_csv.replace(']','')
 		
-		document.getElementById("all_samples").innerHTML = all_samples_csv;
+		document.getElementById("all_samples").innerHTML = all_samples_csv;*/
 
 		// copy text to clipboard
 		var all_samples_clipboard = all_samples_json.replace(/\]\[/g,"\n")
@@ -378,6 +379,7 @@
 		copyText.select();
 		document.execCommand("copy");
 		copyText.style.display = "none";
+		document.getElementById("clipboard_message").innerHTML = 'Data copied to clipboard.';
 
 	}
 
