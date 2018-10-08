@@ -114,23 +114,21 @@
 	      	document.getElementById("rightAnkle_x").innerHTML = resp.keypoints[16].position.x;
 	      	document.getElementById("rightAnkle_y").innerHTML = resp.keypoints[16].position.y;
 
-					sample[0] = Math.round(resp.keypoints[5].position.x, 0) / 800;
-					sample[1] = Math.round(resp.keypoints[5].position.y, 0) / 800;
-					sample[2] = Math.round(resp.keypoints[6].position.x, 0) / 800;
-					sample[3] = Math.round(resp.keypoints[6].position.y, 0) / 800;
-					sample[4] = Math.round(resp.keypoints[7].position.x, 0) / 800;
-					sample[5] = Math.round(resp.keypoints[7].position.y, 0) / 800;
-					sample[6] = Math.round(resp.keypoints[8].position.x, 0) / 800;
-					sample[7] = Math.round(resp.keypoints[8].position.y, 0) / 800;
-					sample[8] = Math.round(resp.keypoints[9].position.x, 0) / 800;
-					sample[9] = Math.round(resp.keypoints[9].position.y, 0) / 800;
-					sample[10] = Math.round(resp.keypoints[10].position.x, 0) / 800;
-					sample[11] = Math.round(resp.keypoints[10].position.y, 0) / 800;
+					//sample[0] = Math.round(resp.keypoints[5].position.x, 0) / 800;
+					//sample[1] = Math.round(resp.keypoints[5].position.y, 0) / 800;
+					//sample[2] = Math.round(resp.keypoints[6].position.x, 0) / 800;
+					//sample[3] = Math.round(resp.keypoints[6].position.y, 0) / 800;
+					//sample[4] = Math.round(resp.keypoints[7].position.x, 0) / 800;
+					//sample[5] = Math.round(resp.keypoints[7].position.y, 0) / 800;
+					//sample[6] = Math.round(resp.keypoints[8].position.x, 0) / 800;
+					//sample[7] = Math.round(resp.keypoints[8].position.y, 0) / 800;
+					//sample[8] = Math.round(resp.keypoints[9].position.x, 0) / 800;
+					//sample[9] = Math.round(resp.keypoints[9].position.y, 0) / 800;
+					//sample[10] = Math.round(resp.keypoints[10].position.x, 0) / 800;
+					//sample[11] = Math.round(resp.keypoints[10].position.y, 0) / 800;
 
 					sample_predict = new Array(1)
-					//sample_predict[0] = new Array(12)
-					//sample_predict = []
-					//sample_predict[0] = new Array(12)
+					sample_predict[0] = new Array(12)
 				
 					sample_predict[0][0] = Math.round(resp.keypoints[5].position.x, 0) / 800;
 					sample_predict[0][1] = Math.round(resp.keypoints[5].position.y, 0) / 800;
@@ -148,10 +146,11 @@
 
 					if (purpose=='preparation') {
 
-						sample[12] = label[labelIndex];
+						sample_with_label = sample_predict[0]
+						sample_with_label[12] = label[labelIndex];
 						
 	
-						sample_json = JSON.stringify(sample);
+						sample_json = JSON.stringify(sample_with_label);
 						all_samples_json = all_samples_json + sample_json;
 	
 						// store the coordinates locally in a log file (available under C:\Users\Christian\AppData\Local\Google\Chrome\User Data\Default\Local Storage\leveldb)
