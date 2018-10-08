@@ -4,8 +4,11 @@
   const outputStride = 8;
 	const videoWidth = 800;
 	const videoHeight = 555;
-  let estimator = null;
+	const model = tf.loadModel('model_tfjs/model.json');
+
+	let estimator = null;
   localStorage.position = ''
+
 	var label = [];
 	var sample = [];
 	var all_samples = [];
@@ -40,9 +43,9 @@
 
 	  loadLabels(video_name);
 
-		if (purpose=='predict') {
-			const model = tf.loadModel('model_tfjs/model.json');
-		}
+		//if (purpose=='predict') {
+		//	const model = tf.loadModel('model_tfjs/model.json');
+		//}
 
 	  video.src = 'videos/' + video_name + '.mp4';
 		video.play();
