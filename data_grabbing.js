@@ -13,51 +13,6 @@
 	var all_samples = [];
 	var all_samples_json = '';
 
-	// test loaded model
-	//const model = await tf.loadModel('model_tfjs/model.json');
-	
-	sample = new Array(1)
-	sample[0] = new Array(12)
-
-	//sample[0][0] = 0.2;
-	//sample[0][1] = 0.4;
-	//sample[0][2] = 0.3;
-	//sample[0][3] = 0.6;
-	//sample[0][4] = 0.1;
-	//sample[0][5] = 0.2;
-	//sample[0][6] = 0.7;
-	//sample[0][7] = 0.3;
-	//sample[0][8] = 0.6;
-	//sample[0][9] = 0.8;
-	//sample[0][10] = 0.4;
-	//sample[0][11] = 0.2;
-
-
-	async function predictFromModel(sample)	{
-
-			sample_tensor = tf.tensor(sample);
-
-			const model = await tf.loadModel('model_tfjs/model.json');
-			predicted = model.predict(sample_tensor)
-			const values = predicted.dataSync();
-			const arr = Array.from(values);
-
-			document.getElementById("stop").innerHTML = arr[0];
-			document.getElementById("left").innerHTML = arr[1];
-			document.getElementById("right").innerHTML = arr[2];
-			document.getElementById("up").innerHTML = arr[3];
-			document.getElementById("down").innerHTML = arr[4];
-
-	}
-
-	//predictFromModel(sample);
-
-
-
-
-
-
-
 
 	function getCoordinatesWebcam() {
 	// gets the coordinates for each snapshot of the webcam
@@ -172,6 +127,25 @@
 					sample[10] = Math.round(resp.keypoints[10].position.x, 0) / 800;
 					sample[11] = Math.round(resp.keypoints[10].position.y, 0) / 800;
 
+					//sample_predict = new Array(1)
+					//sample_predict[0] = new Array(12)
+					sample_predict = []
+					//sample_predict[0] = new Array(12)
+				
+					sample_predict[0][0] = Math.round(resp.keypoints[5].position.x, 0) / 800;
+					sample_predict[0][1] = Math.round(resp.keypoints[5].position.y, 0) / 800;
+					sample_predict[0][2] = Math.round(resp.keypoints[6].position.x, 0) / 800;
+					sample_predict[0][3] = Math.round(resp.keypoints[6].position.y, 0) / 800;
+					sample_predict[0][4] = Math.round(resp.keypoints[7].position.x, 0) / 800;
+					sample_predict[0][5] = Math.round(resp.keypoints[7].position.y, 0) / 800;
+					sample_predict[0][6] = Math.round(resp.keypoints[8].position.x, 0) / 800;
+					sample_predict[0][7] = Math.round(resp.keypoints[8].position.y, 0) / 800;
+					sample_predict[0][8] = Math.round(resp.keypoints[9].position.x, 0) / 800;
+					sample_predict[0][9] = Math.round(resp.keypoints[9].position.y, 0) / 800;
+					sample_predict[0][10] = Math.round(resp.keypoints[10].position.x, 0) / 800;
+					sample_predict[0][11] = Math.round(resp.keypoints[10].position.y, 0) / 800;
+
+
 					if (purpose=='preparation') {
 
 						sample[12] = label[labelIndex];
@@ -188,21 +162,6 @@
 
 					else {
 
-						sample_predict = new Array(1)
-						sample_predict[0] = new Array(12)
-					
-						sample_predict[0][0] = Math.round(resp.keypoints[5].position.x, 0) / 800;
-						sample_predict[0][1] = Math.round(resp.keypoints[5].position.y, 0) / 800;
-						sample_predict[0][2] = Math.round(resp.keypoints[6].position.x, 0) / 800;
-						sample_predict[0][3] = Math.round(resp.keypoints[6].position.y, 0) / 800;
-						sample_predict[0][4] = Math.round(resp.keypoints[7].position.x, 0) / 800;
-						sample_predict[0][5] = Math.round(resp.keypoints[7].position.y, 0) / 800;
-						sample_predict[0][6] = Math.round(resp.keypoints[8].position.x, 0) / 800;
-						sample_predict[0][7] = Math.round(resp.keypoints[8].position.y, 0) / 800;
-						sample_predict[0][8] = Math.round(resp.keypoints[9].position.x, 0) / 800;
-						sample_predict[0][9] = Math.round(resp.keypoints[9].position.y, 0) / 800;
-						sample_predict[0][10] = Math.round(resp.keypoints[10].position.x, 0) / 800;
-						sample_predict[0][11] = Math.round(resp.keypoints[10].position.y, 0) / 800;						
 
 						predictFromModel(sample_predict);
 						
@@ -264,8 +223,6 @@
                     down_ind = 'detected<br>' + down_ind;
                     direction = 'down.png';
             }
-
-
 
             document.getElementById("label_display").src = "images/" + direction;           
 
@@ -330,7 +287,8 @@
 	  const video = await setupCamera();
 	  video.play();
 
-	  return video;
+		return video;
+		
 	}
 	
 
@@ -388,4 +346,25 @@
 		all_samples_csv = all_samples_csv.replace(']','')
 		
 		document.getElementById("all_samples").innerHTML = all_samples_csv;
+
 	}
+
+
+	async function predictFromModel(sample)	{
+		// predicts the direction from a sample using the model trained in keras
+	
+				sample_tensor = tf.tensor(sample);
+	
+				const model = await tf.loadModel('model_tfjs/model.json');
+				predicted = model.predict(sample_tensor)
+				const values = predicted.dataSync();
+				const arr = Array.from(values);
+	
+				document.getElementById("stop").innerHTML = arr[0];
+				document.getElementById("left").innerHTML = arr[1];
+				document.getElementById("right").innerHTML = arr[2];
+				document.getElementById("up").innerHTML = arr[3];
+				document.getElementById("down").innerHTML = arr[4];
+	
+		}
+	
