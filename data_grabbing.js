@@ -365,7 +365,16 @@
 		all_samples_csv = all_samples_csv.replace('[','')
 		all_samples_csv = all_samples_csv.replace(']','')
 		
-		document.getElementById("all_samples").innerHTML = all_samples_csv;
+		//document.getElementById("all_samples").innerHTML = all_samples_csv;
+		var copyText = document.getElementById("all_samples");
+
+		copyTextinnerHTML = all_samples_csv
+
+		/* Select the text field */
+		copyText.select();
+	
+		/* Copy the text inside the text field */
+		document.execCommand("copy");
 
 	}
 
