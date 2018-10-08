@@ -1,6 +1,6 @@
 ## Drone Steering Using Gestures
 
-We use the PoseNet model as the basis to steer a drone using gestures recorded by a webcam. The tool is available [here](https://drone-steering.azurewebsites.net/webcam.html) currently supports the following gestures:
+We use the PoseNet model as the basis to steer a drone using gestures recorded by a webcam. The tool is available [here](https://drone-steering.azurewebsites.net/predict_delta.html) and currently supports the following gestures (respectively postures, see separate section below):
 
 ![Supported gestures](https://drone-steering.azurewebsites.net/images/summary.png)
 
