@@ -46,10 +46,10 @@
 			const arr = Array.from(values);
 			//console.log(arr);
 			document.getElementById("stop").innerHTML = arr[0];
-			document.getElementById("left").innerHTML = arr[0];
-			document.getElementById("right").innerHTML = arr[0];
-			document.getElementById("up").innerHTML = arr[0];
-			document.getElementById("down").innerHTML = arr[0];
+			document.getElementById("left").innerHTML = arr[1];
+			document.getElementById("right").innerHTML = arr[2];
+			document.getElementById("up").innerHTML = arr[3];
+			document.getElementById("down").innerHTML = arr[4];
 
 			//console.log(arr[0])
 			//console.log(arr[1])
