@@ -369,7 +369,7 @@
 		document.getElementById("all_samples").innerHTML = all_samples_csv;
 
 		/* Get the text field */
-		var copyText = document.getElementById("myInput");
+		var copyText = document.getElementById("all_samples_clipboard");
 		copyText.value = all_samples_csv;
 
 		/* Select the text field */
