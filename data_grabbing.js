@@ -366,13 +366,15 @@
 		all_samples_csv = all_samples_csv.replace(']','')
 		
 		//document.getElementById("all_samples").innerHTML = all_samples_csv;
-		var copyText = document.getElementById("all_samples");
+		document.getElementById("all_samples").innerHTML = all_samples_csv;
 
-		copyTextinnerHTML = all_samples_csv
+		/* Get the text field */
+		var copyText = document.getElementById("myInput");
+		copyText.value = all_samples_csv;
 
 		/* Select the text field */
 		copyText.select();
-	
+
 		/* Copy the text inside the text field */
 		document.execCommand("copy");
 
