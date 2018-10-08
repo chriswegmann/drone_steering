@@ -33,7 +33,7 @@
 	//console.log(prediction);
 
 
-	async function(response)
+	async function predictFromModel(response)
 	{
 			console.log('response: ',response);
 			var arr=response;
@@ -41,7 +41,7 @@
 			console.log(model.predict(arr))
 	}
 
-
+	predictFromModel(sample_tensor)
 
 
 
