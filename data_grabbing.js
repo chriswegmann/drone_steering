@@ -29,18 +29,17 @@
 	sample[11] = 0.2;
 
 	sample_tensor = tf.tensor(sample);
-	const prediction = model.predict(sample_tensor);
-	console.log(prediction);
+	//const prediction = model.predict(sample_tensor);
+	//console.log(prediction);
 
 
-	//var a = (form.input1.value);
-	//$.post('http://127.0.0.1:5000/',{"text":a}, async function(response)
-	//{
-	//		console.log('response: ',response);
-	//		var arr=response;
-	//		const model= await tf.loadModel('./json/model.json');
-	//		console.log(model.predict(arr))
-	//});
+	async function(response)
+	{
+			console.log('response: ',response);
+			var arr=response;
+			const model= await tf.loadModel('model_tfjs/model.json');
+			console.log(model.predict(arr))
+	}
 
 
 
