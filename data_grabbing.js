@@ -15,18 +15,18 @@
 
 	// test loaded model
 	//const model = await tf.loadModel('model_tfjs/model.json');
-	sample[0] = 0.2;
-	sample[1] = 0.4;
-	sample[2] = 0.3;
-	sample[3] = 0.6;
-	sample[4] = 0.1;
-	sample[5] = 0.2;
-	sample[6] = 0.7;
-	sample[7] = 0.3;
-	sample[8] = 0.6;
-	sample[9] = 0.8;
-	sample[10] = 0.4;
-	sample[11] = 0.2;
+	sample[0,0] = 0.2;
+	sample[0,1] = 0.4;
+	sample[0,2] = 0.3;
+	sample[0,3] = 0.6;
+	sample[0,4] = 0.1;
+	sample[0,5] = 0.2;
+	sample[0,6] = 0.7;
+	sample[0,7] = 0.3;
+	sample[0,8] = 0.6;
+	sample[0,9] = 0.8;
+	sample[0,10] = 0.4;
+	sample[0,11] = 0.2;
 
 	sample_tensor = tf.tensor(sample);
 	//const prediction = model.predict(sample_tensor);
