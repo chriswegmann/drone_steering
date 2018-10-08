@@ -368,7 +368,7 @@
 		document.getElementById("all_samples").innerHTML = all_samples_csv;
 
 		// copy text to clipboard
-		var all_samples_clipboard = all_samples_json.replace(/\]\[/g,'\n')
+		var all_samples_clipboard = all_samples_json.replace(/\]\[/g,"\n")
 		all_samples_clipboard = all_samples_clipboard.replace('[','')
 		all_samples_clipboard = all_samples_clipboard.replace(']','')
 
