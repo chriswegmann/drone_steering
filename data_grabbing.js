@@ -368,12 +368,12 @@
 		document.getElementById("all_samples").innerHTML = all_samples_csv;
 
 		// copy text to clipboard
-		var all_samples_csv = all_samples_json.replace(/\]\[/g,'\n')
-		all_samples_csv = all_samples_csv.replace('[','')
-		all_samples_csv = all_samples_csv.replace(']','')
+		var all_samples_clipboard = all_samples_json.replace(/\]\[/g,'\n')
+		all_samples_clipboard = all_samples_clipboard.replace('[','')
+		all_samples_clipboard = all_samples_clipboard.replace(']','')
 
 		var copyText = document.getElementById("all_samples_clipboard");
-		copyText.value = all_samples_csv;
+		copyText.value = all_samples_clipboard;
 		copyText.select();
 		document.execCommand("copy");
 
