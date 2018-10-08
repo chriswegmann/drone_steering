@@ -45,11 +45,17 @@
 			const values = predicted.dataSync();
 			const arr = Array.from(values);
 			//console.log(arr);
-			console.log(arr[0])
-			console.log(arr[1])
-			console.log(arr[2])
-			console.log(arr[3])
-			console.log(arr[4])
+			document.getElementById("stop").innerHTML = arr[0];
+			document.getElementById("left").innerHTML = arr[0];
+			document.getElementById("right").innerHTML = arr[0];
+			document.getElementById("up").innerHTML = arr[0];
+			document.getElementById("down").innerHTML = arr[0];
+
+			//console.log(arr[0])
+			//console.log(arr[1])
+			//console.log(arr[2])
+			//console.log(arr[3])
+			//console.log(arr[4])
 			//console.log(model.predict(response))
 	}
 
