@@ -219,7 +219,6 @@
 							document.getElementById("leftArm_y").innerHTML = leftArm_y;
 							document.getElementById("rightArm_y").innerHTML = rightArm_y;
 
-
 							document.getElementById("label_display").src = "images/" + direction;           
 	
 							document.getElementById("stop").innerHTML = stop_ind;
@@ -359,16 +358,8 @@
 	
 	
 	function getFeatures() {
-	// dumps all samples (features and label) at the bottom of the page
+	// copies the samples (features and label) to the clipboard
 		
-		/*
-		var all_samples_csv = all_samples_json.replace(/\]\[/g,'<br>')
-		all_samples_csv = all_samples_csv.replace('[','')
-		all_samples_csv = all_samples_csv.replace(']','')
-		
-		document.getElementById("all_samples").innerHTML = all_samples_csv;*/
-
-		// copy text to clipboard
 		var all_samples_clipboard = all_samples_json.replace(/\]\[/g,"\n")
 		all_samples_clipboard = all_samples_clipboard.replace('[','')
 		all_samples_clipboard = all_samples_clipboard.replace(']','')
@@ -385,21 +376,20 @@
 
 
 	async function predictFromModel(sample)	{
-		// predicts the direction from a sample using the model trained in keras
+	// predicts the direction from a sample using the model trained in keras
 	
-				sample_tensor = tf.tensor(sample);
-				console.log(sample_tensor);
-	
-				const model = await tf.loadModel('model_tfjs/model.json');
-				predicted = model.predict(sample_tensor)
-				const values = predicted.dataSync();
-				const arr = Array.from(values);
-	
-				document.getElementById("stop").innerHTML = arr[0];
-				document.getElementById("left").innerHTML = arr[1];
-				document.getElementById("right").innerHTML = arr[2];
-				document.getElementById("up").innerHTML = arr[3];
-				document.getElementById("down").innerHTML = arr[4];
-	
-		}
-	
+		sample_tensor = tf.tensor(sample);
+		console.log(sample_tensor);
+
+		const model = await tf.loadModel('model_tfjs/model.json');
+		predicted = model.predict(sample_tensor)
+		const values = predicted.dataSync();
+		const arr = Array.from(values);
+
+		document.getElementById("stop").innerHTML = arr[0];
+		document.getElementById("left").innerHTML = arr[1];
+		document.getElementById("right").innerHTML = arr[2];
+		document.getElementById("up").innerHTML = arr[3];
+		document.getElementById("down").innerHTML = arr[4];
+
+	}

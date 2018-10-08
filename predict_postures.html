@@ -88,21 +88,7 @@
 				</table>
 	
 				<br>				
-								
-				<table>
-					<tr>
-						<td valign="middle" width="160px">
-							<select id="selected_video">
-							  <option value="video_001">video_001</option>
-							  <option value="video_002">video_002</option>
-							</select>
-						</td>
-						<td width="450px" align="left">
-							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;" onClick="getCoordinatesVideo('predict')">Load video</button>
-						</td>
-					</tr>
-				</table>
-				
+
 				<table>
 					<tr valign="top">
 						<td>
@@ -141,13 +127,7 @@
 								
 							</table>
 							
-							<p>We have stored the coordinates <span id="count">0</span> time(s).</p>
-
-						</td>
-
-						<td width="50px"></td>
-						
-						<td width="400px">
+							<br><br>
 
 							<table width="100%">
 								<tr>
@@ -158,21 +138,34 @@
 								<tr>
 									<td align="center">
 
-										<table style="border: none;">
+										<table style="border: none;" width="100%">
 											<tr><td width="100px"></td><td align="center" width="180px">Probability</td></tr>
 											<tr style="background-color: #f2f2f2;"><td>stop</td><td><span id="stop"></span></td></tr>
 											<tr><td>left</td><td><span id="left"></span></td></tr>
 											<tr style="background-color: #f2f2f2;"><td>right</td><td><span id="right"></span></td></tr>
 											<tr><td>up</td><td><span id="up"></span></td></tr>
 											<tr style="background-color: #f2f2f2;"><td>down</td><td><span id="down"></span></td></tr>
-											
 										</table>
 
 									</td>
 								</tr>
 							</table>
+								
+						</td>
 
-						</td>				
+						<td width="50px"></td>
+						
+						<td width="400px">
+
+							<table width="100%">
+								<tr>
+									<td align="center">
+										<img id="label_display" src="images/stop.png">
+									</td>
+								</tr>
+							</table>
+		
+						</td>
 						
 					</tr>					
 				</table>
