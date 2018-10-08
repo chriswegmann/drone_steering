@@ -66,7 +66,7 @@
 	}
   
   
-  function getCoord Snapshot(imgData, labelIndex, sourceType, modelType='none') {
+  function getCoordSnapshot(imgData, labelIndex, sourceType, modelType='none') {
 	// gets to coordinates of imgData at the given time and store or display the information
 	
     posenet
