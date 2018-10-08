@@ -140,7 +140,7 @@
 					}
 
 					else {
-
+						console.log('test');
 						const prediction = model.predict(sample);
 						console.log(prediction);
 
