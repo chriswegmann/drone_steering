@@ -373,9 +373,11 @@
 		all_samples_clipboard = all_samples_clipboard.replace(']','')
 
 		var copyText = document.getElementById("all_samples_clipboard");
+		copyText.style.display = "inline";
 		copyText.value = all_samples_clipboard;
 		copyText.select();
 		document.execCommand("copy");
+		copyText.style.display = "none";
 
 	}
 
