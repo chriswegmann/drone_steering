@@ -36,7 +36,7 @@ We are currently in the second stage, with the model already being embedded but 
 
 ![Gesture model](https://drone-steering.azurewebsites.net/images/gesture_model.png)
 
-We are currently evaluating the best approach for a gesture model. For simplicity we assume a maximum duration of two seconds for a gesture, with time steps of 0.05 seconds. Our initial idea is that the model input for a given point in time is an ordered set of 40 positions covering the last two seconds. The subsequent input would again be a set of 40 positions, with the oldest dropped and a new position added as the first. We thus 'outsource' the memory to the part where data is generated. Schematically, this looks as follows:
+We are currently evaluating the best approach for a gesture model. For simplicity we assume a maximum duration of two seconds for a gesture, with time steps of 0.05 seconds. Our initial idea is that the model input for a given point in time is an ordered set of 40 positions covering the last two seconds. The subsequent input would again be a set of 40 positions, with the oldest dropped and a new position added as the first. We thus outsource the 'rembering across time' from the model to the part of the application where data is generated. Schematically, this looks as follows (with the gray positions being the ones sent together as an input):
 
 ![Gesture model](https://drone-steering.azurewebsites.net/images/gesture_model_data.png)
 
