@@ -42,6 +42,9 @@
 			//var arr=response;
 			const model = await tf.loadModel('model_tfjs/model.json');
 			predicted = model.predict(response)
+			const values = predicted.dataSync();
+			const arr = Array.from(values);
+			console.log(arr);
 			//console.log(predicted)
 			//console.log(predicted[0][0])
 			//console.log(predicted[0][1])
