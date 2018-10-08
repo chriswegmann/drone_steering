@@ -42,13 +42,13 @@
 			//var arr=response;
 			const model = await tf.loadModel('model_tfjs/model.json');
 			predicted = model.predict(response)
-			console.log(predicted)
+			//console.log(predicted)
 			//console.log(predicted[0][0])
 			//console.log(predicted[0][1])
 			//console.log(predicted[0][2])
 			//console.log(predicted[0][3])
 			//console.log(predicted[0][4])
-			//console.log(model.predict(response))
+			console.log(model.predict(response))
 	}
 
 	predictFromModel(sample_tensor);
