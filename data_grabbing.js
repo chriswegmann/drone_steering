@@ -32,34 +32,30 @@
 	sample[0][10] = 0.4;
 	sample[0][11] = 0.2;
 
-	sample_tensor = tf.tensor(sample);
+	//sample_tensor = tf.tensor(sample);
 	//const prediction = model.predict(sample_tensor);
 	//console.log(prediction);
 
 
-	async function predictFromModel(response)	{
-			console.log('response: ', response);
-			//var arr=response;
+	async function predictFromModel(sample)	{
+			//console.log('response: ', response);
+
+			sample_tensor = tf.tensor(sample);
+
 			const model = await tf.loadModel('model_tfjs/model.json');
-			predicted = model.predict(response)
+			predicted = model.predict(sample_tensor)
 			const values = predicted.dataSync();
 			const arr = Array.from(values);
-			//console.log(arr);
+
 			document.getElementById("stop").innerHTML = arr[0];
 			document.getElementById("left").innerHTML = arr[1];
 			document.getElementById("right").innerHTML = arr[2];
 			document.getElementById("up").innerHTML = arr[3];
 			document.getElementById("down").innerHTML = arr[4];
 
-			//console.log(arr[0])
-			//console.log(arr[1])
-			//console.log(arr[2])
-			//console.log(arr[3])
-			//console.log(arr[4])
-			//console.log(model.predict(response))
 	}
 
-	predictFromModel(sample_tensor);
+	predictFromModel(sample);
 
 
 
