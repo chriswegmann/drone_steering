@@ -143,8 +143,8 @@
 					}
 
 					else {
-						console.log('test');
-						const prediction = model.predict(sample);
+						sample_tensor = tf.tensor(sample);
+						const prediction = model.predict(sample_tensor);
 						console.log(prediction);
 
 					}
