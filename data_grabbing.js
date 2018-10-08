@@ -127,10 +127,10 @@
 					sample[10] = Math.round(resp.keypoints[10].position.x, 0) / 800;
 					sample[11] = Math.round(resp.keypoints[10].position.y, 0) / 800;
 
-					//sample_predict = new Array(1)
+					sample_predict = new Array(1)
 					//sample_predict[0] = new Array(12)
-					sample_predict = []
-					//sample_predict[0] = new Array(12)
+					//sample_predict = []
+					sample_predict[0] = new Array(12)
 				
 					sample_predict[0][0] = Math.round(resp.keypoints[5].position.x, 0) / 800;
 					sample_predict[0][1] = Math.round(resp.keypoints[5].position.y, 0) / 800;
