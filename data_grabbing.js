@@ -33,15 +33,14 @@
 	//console.log(prediction);
 
 
-	async function predictFromModel(response)
-	{
-			console.log('response: ',response);
-			var arr=response;
+	async function predictFromModel(response)	{
+			console.log('response: ', response);
+			//var arr=response;
 			const model = await tf.loadModel('model_tfjs/model.json');
-			console.log(model.predict(arr))
+			console.log(model.predict(response))
 	}
 
-	predictFromModel(sample_tensor)
+	predictFromModel(sample_tensor);
 
 
 
