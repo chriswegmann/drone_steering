@@ -196,6 +196,25 @@
 											direction = 'down.png';
 							}
 	
+							document.getElementById("leftShoulder_x").innerHTML = leftShoulder_x;
+							document.getElementById("leftShoulder_y").innerHTML = leftShoulder_y;
+							document.getElementById("rightShoulder_x").innerHTML = rightShoulder_x;
+							document.getElementById("rightShoulder_y").innerHTML = rightShoulder_y;
+							document.getElementById("leftElbow_x").innerHTML = leftElbow_x;
+							document.getElementById("leftElbow_y").innerHTML = leftElbow_y;
+							document.getElementById("rightElbow_x").innerHTML = rightElbow_x;
+							document.getElementById("rightElbow_y").innerHTML = rightElbow_y;
+							document.getElementById("leftWrist_x").innerHTML = leftWrist_x;
+							document.getElementById("leftWrist_y").innerHTML = leftWrist_y;
+							document.getElementById("rightWrist_x").innerHTML = rightWrist_x;
+							document.getElementById("rightWrist_y").innerHTML = rightWrist_y;
+
+							document.getElementById("leftArm_x").innerHTML = leftArm_x;
+							document.getElementById("rightArm_x").innerHTML = rightArm_x;
+							document.getElementById("leftArm_y").innerHTML = leftArm_y;
+							document.getElementById("rightArm_y").innerHTML = rightArm_y;
+
+
 							document.getElementById("label_display").src = "images/" + direction;           
 	
 							document.getElementById("stop_calc").innerHTML = stop_ind;
