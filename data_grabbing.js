@@ -350,6 +350,7 @@
 		// predicts the direction from a sample using the model trained in keras
 	
 				sample_tensor = tf.tensor(sample);
+				console.log(sample_tensor);
 	
 				const model = await tf.loadModel('model_tfjs/model.json');
 				predicted = model.predict(sample_tensor)
