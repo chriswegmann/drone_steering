@@ -365,17 +365,16 @@
 		all_samples_csv = all_samples_csv.replace('[','')
 		all_samples_csv = all_samples_csv.replace(']','')
 		
-		//document.getElementById("all_samples").innerHTML = all_samples_csv;
 		document.getElementById("all_samples").innerHTML = all_samples_csv;
 
-		/* Get the text field */
+		// copy text to clipboard
+		var all_samples_csv = all_samples_json.replace(/\]\[/g,'\n')
+		all_samples_csv = all_samples_csv.replace('[','')
+		all_samples_csv = all_samples_csv.replace(']','')
+
 		var copyText = document.getElementById("all_samples_clipboard");
 		copyText.value = all_samples_csv;
-
-		/* Select the text field */
 		copyText.select();
-
-		/* Copy the text inside the text field */
 		document.execCommand("copy");
 
 	}
