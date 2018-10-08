@@ -44,14 +44,13 @@
 			predicted = model.predict(response)
 			const values = predicted.dataSync();
 			const arr = Array.from(values);
-			console.log(arr);
-			//console.log(predicted)
-			//console.log(predicted[0][0])
-			//console.log(predicted[0][1])
-			//console.log(predicted[0][2])
-			//console.log(predicted[0][3])
-			//console.log(predicted[0][4])
-			console.log(model.predict(response))
+			//console.log(arr);
+			console.log(arr[0])
+			console.log(arr[1])
+			console.log(arr[2])
+			console.log(arr[3])
+			console.log(arr[4])
+			//console.log(model.predict(response))
 	}
 
 	predictFromModel(sample_tensor);
