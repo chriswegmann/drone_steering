@@ -1,34 +1,9 @@
 
-	table, td, th {
-    font-family: 'Lato', sans-serif;
-	}
+table, td, th {
+  font-family: 'Lato', sans-serif;
+}
 
-	select {
-	  appearance: none;
-	  border:none;
-	  border-radius: 0;
-	  font-size: 1em;
-	  width: 100%
-	} 
-
-	select {
-	  width:150px;
-	  border: 1px solid #bbb;
-	  padding:.25em 0.25em .25em 1em;
-	  background-color:white;
-	  background-position: right;
-	  background-repeat: no-repeat;
-	}
-
-	select:hover {
-	  box-shadow: 0 1px 1px 0 rgba(0,0,0,0.1);
-	}
-
-
-
-input {
-  -webkit-appearance: none;
-  -moz-appearance: none;
+select {
   appearance: none;
   border:none;
   border-radius: 0;
@@ -36,65 +11,17 @@ input {
   width: 100%
 } 
 
-/* graceful degradation for ie8 */
-input[type='checkbox'],
-input[type='radio'] {
-  width:auto;
-  float:left;
-  margin-right: .75em;
-  background:transparent;
-  border:none;
+select {
+  width:150px;
+  border: 1px solid #bbb;
+  padding:.25em 0.25em .25em 1em;
+  background-color:white;
+  background-position: right;
+  background-repeat: no-repeat;
 }
 
-/* better styling only for modern browsers. To identify them, check for pseudoclass (:checked, :not(:checked)) */
-
-/* hide standard inputs */
-input[type='checkbox']:checked,
-input[type='checkbox']:not(:checked),
-input[type='radio']:checked,
-input[type='radio']:not(:checked) {
-  background: transparent;
-  position: relative;
-  visibility: hidden;
-  margin:0;
-  padding:0;
+select:hover {
+  box-shadow: 0 1px 1px 0 rgba(0,0,0,0.1);
 }
 
-input[type='checkbox'] + label,
-input[type='radio'] + label {
-  cursor: pointer;
-}
 
-/* add custom inputs with ::before */
-input[type='checkbox']:checked + label::before, 
-input[type='checkbox']:not(:checked) + label::before,
-input[type='radio']:checked + label::before,
-input[type='radio']:not(:checked) + label::before {
-    content:' ';
-    display:inline-block;
-    width: 17px;
-    height:17px;
-    position: relative;
-    top:4px;
-    border: 1px solid #bbb;
-    background: white;
-    margin-right: 1em;
-    box-shadow: inset 0 1px 1px 0 rgba(0,0,0,.1);
-}
-
-input[type=radio]:checked + label::before,
-input[type=radio]:not(:checked) + label::before {
-  border-radius: 30px;
-}
-
-input[type='checkbox']:hover  + label::before,
-input[type='radio']:hover  + label::before {
-  background:#ddd;
-  box-shadow: inset 0 0 0 2px white;
-}
-  
-input[type='checkbox']:checked  + label::before,
-input[type='radio']:checked  + label::before {
-  background:black;
-  box-shadow: inset 0 0 0 2px white;
-}

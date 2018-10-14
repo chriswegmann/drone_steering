@@ -9,8 +9,8 @@
 
 	<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
 	<script src="https://d3js.org/d3-fetch.v1.min.js"></script>
-  <script src="https://unpkg.com/@tensorflow/tfjs"></script>
-  <script src="https://unpkg.com/@tensorflow-models/posenet"></script>
+  	<script src="https://unpkg.com/@tensorflow/tfjs"></script>
+  	<script src="https://unpkg.com/@tensorflow-models/posenet"></script>
 	<script src="data_grabbing.js"></script>
 
 	<link href="https://fonts.googleapis.com/css?family=Bai+Jamjuree" rel="stylesheet">
@@ -67,38 +67,65 @@
 
 				<br>				
 								
-				<table>
+				<table width="100%">
 					<tr>
 						<td valign="middle" width="160px">
 							<select id="selected_video">
-							  <option value="video_001">video_001</option>
-							  <option value="video_002">video_002</option>
-							  <option value="video_003">video_003</option>
-							  <option value="video_004">video_004</option>
-							  <option value="video_005">video_005</option>
-							  <option value="video_006">video_006</option>
-							  <option value="video_007">video_007</option>
-							  <option value="video_008">video_008</option>
-							  <option value="video_009">video_009</option>
-							  <option value="video_010">video_010</option>
-							  <option value="video_011">video_011</option>
-							  <option value="video_012">video_012</option>
-							  <option value="video_013">video_013</option>
-							  <option value="video_014">video_014</option>
-							  <option value="video_015">video_015</option>
-							  <option value="video_016">video_016</option>
-							  <option value="video_017">video_017</option>
-							  <option value="video_018">video_018</option>
-							  <option value="video_019">video_019</option>
-							  <option value="video_020">video_020</option>
-
+							  <option value="001">video_001</option>
+							  <option value="002">video_002</option>
+							  <option value="003">video_003</option>
+							  <option value="004">video_004</option>
+							  <option value="005">video_005</option>
+							  <option value="006">video_006</option>
+							  <option value="007">video_007</option>
+							  <option value="008">video_008</option>
+							  <option value="009">video_009</option>
+							  <option value="010">video_010</option>
+							  <option value="011">video_011</option>
+							  <option value="012">video_012</option>
+							  <option value="013">video_013</option>
+							  <option value="014">video_014</option>
+							  <option value="015">video_015</option>
+							  <option value="016">video_016</option>
+							  <option value="017">video_017</option>
+							  <option value="018">video_018</option>
+							  <option value="019">video_019</option>
+							  <option value="020">video_020</option>
 							</select>
 						</td>
-						<td width="450px" align="left">
-							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;" onClick="getCoordinatesVideo()">Load video</button>
-							<!--<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;">Load all videos</button>-->
+						<td align="left" width="530px">
+							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;" onClick="getCoordinatesVideo()">Load video(s)</button>
 							<button style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;" onClick="getFeatures()">Get features</button>
 							<span id="clipboard_message"></span>
+						</td>
+						<td width="300px">
+								Type: 
+							<input type="radio" id="posture" name="posture_gesture" value="posture" checked=1 onClick="showHideSeqLength()"> Postures
+							<input type="radio" id="gesture" name="posture_gesture" value="gesture" onClick="showHideSeqLength()"> Gestures
+						</td>
+						<td width="120px">
+							<input type="checkbox" id="all_videos" name="all_videos" value="1" onClick="enableDisableVideoSelection()"> All Videos
+						</td>
+						<td width="200px">
+							Step Time:
+							<select id="step_time" style="width: 90px; padding:.25em 0em .25em 0.1em;">
+								<option value=50>50ms</option>
+								<option value=100>100ms</option>
+								<option value=200>200ms</option>
+								<option value=300>300ms</option>
+								<option value=500>500ms</option>
+							</select>
+						</td>
+						<td width="300px">
+							<span id="seq_length_label"></span>
+							<select id="seq_length" style="width: 90px; padding:.25em 0em .25em 0.1em; display: none;">
+								<option value=50>1 sec</option>
+								<option value=100>1.5 sec</option>
+								<option value=200>2 sec</option>
+								<option value=300>3 sec</option>
+							</select>
+						</td>
+						<td>
 						</td>
 					</tr>
 				</table>
@@ -120,24 +147,24 @@
 							</table>
 
 							<table style="border: none;">
-								<tr><td></td><td align="center" width="180px">X</td><td align="center" width="180px">Y</td></tr>
-								<tr style="background-color: #f2f2f2;"><td>nose</td><td><span id="nose_x"></span></td><td><span id="nose_y"></span></td></tr>
-								<tr><td>leftEye</td><td><span id="leftEye_x"></span></td><td><span id="leftEye_y"></span></td></tr>
-								<tr style="background-color: #f2f2f2;"><td>rightEye</td><td><span id="rightEye_x"></span></td><td><span id="rightEye_y"></span></td></tr>
-								<tr><td>leftEar</td><td><span id="leftEar_x"></span></td><td><span id="leftEar_y"></span></td></tr>
-								<tr style="background-color: #f2f2f2;"><td>rightEar</td><td><span id="rightEar_x"></span></td><td><span id="rightEar_y"></span></td></tr>
-								<tr><td>leftShoulder</td><td><span id="leftShoulder_x"></span></td><td><span id="leftShoulder_y"></span></td></tr>
-								<tr style="background-color: #f2f2f2;"><td>rightShoulder</td><td><span id="rightShoulder_x"></span></td><td><span id="rightShoulder_y"></span></td></tr>
-								<tr><td>leftElbow</td><td><span id="leftElbow_x"></span></td><td><span id="leftElbow_y"></span></td></tr>
-								<tr style="background-color: #f2f2f2;"><td>rightElbow</td><td><span id="rightElbow_x"></span></td><td><span id="rightElbow_y"></span></td></tr>
-								<tr><td>leftWrist</td><td><span id="leftWrist_x"></span></td><td><span id="leftWrist_y"></span></td></tr>
-								<tr style="background-color: #f2f2f2;"><td>rightWrist</td><td><span id="rightWrist_x"></span></td><td><span id="rightWrist_y"></span></td></tr>
-								<tr><td>leftHip</td><td><span id="leftHip_x"></span></td><td><span id="leftHip_y"></span></td></tr>
-								<tr style="background-color: #f2f2f2;"><td>rightHip</td><td><span id="rightHip_x"></span></td><td><span id="rightHip_y"></span></td></tr>
-								<tr><td>leftKnee</td><td><span id="leftKnee_x"></span></td><td><span id="leftKnee_y"></span></td></tr>
-								<tr style="background-color: #f2f2f2;"><td>rightKnee</td><td><span id="rightKnee_x"></span></td><td><span id="rightKnee_y"></span></td></tr>
-								<tr><td>leftAnkle</td><td><span id="leftAnkle_x"></span></td><td><span id="leftAnkle_y"></span></td></tr>
-								<tr style="background-color: #f2f2f2;"><td>rightAnkle</td><td><span id="rightAnkle_x"></span></td><td><span id="rightAnkle_y"></span></td></tr>
+								<tr><td></td><td></td><td align="center" width="180px">X</td><td align="center" width="180px">Y</td></tr>
+								<tr style="background-color: #f2f2f2;"><td><input type="checkbox" id="keypoint_0"></td><td>nose</td><td><span id="keypoint_0_x"></span></td><td><span id="keypoint_0_y"></span></td></tr>
+								<tr><td><input type="checkbox" id="keypoint_1"></td><td>leftEye</td><td><span id="keypoint_1_x"></span></td><td><span id="keypoint_1_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td><input type="checkbox" id="keypoint_2"></td><td>rightEye</td><td><span id="keypoint_2_x"></span></td><td><span id="keypoint_2_y"></span></td></tr>
+								<tr><td><input type="checkbox" id="keypoint_3"></td><td>leftEar</td><td><span id="keypoint_3_x"></span></td><td><span id="keypoint_3_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td><input type="checkbox" id="keypoint_4" ></td><td>rightEar</td><td><span id="keypoint_4_x"></span></td><td><span id="keypoint_4_y"></span></td></tr>
+								<tr><td><input type="checkbox" id="keypoint_5" checked></td><td>leftShoulder</td><td><span id="keypoint_5_x"></span></td><td><span id="keypoint_5_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td><input type="checkbox" id="keypoint_6" checked></td><td>rightShoulder</td><td><span id="keypoint_6_x"></span></td><td><span id="keypoint_6_y"></span></td></tr>
+								<tr><td><input type="checkbox" id="keypoint_7" checked></td><td>leftElbow</td><td><span id="keypoint_7_x"></span></td><td><span id="keypoint_7_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td><input type="checkbox" id="keypoint_8" checked></td><td>rightElbow</td><td><span id="keypoint_8_x"></span></td><td><span id="keypoint_8_y"></span></td></tr>
+								<tr><td><input type="checkbox" id="keypoint_9" checked></td><td>leftWrist</td><td><span id="keypoint_9_x"></span></td><td><span id="keypoint_9_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td><input type="checkbox" id="keypoint_10" checked></td><td>rightWrist</td><td><span id="keypoint_10_x"></span></td><td><span id="keypoint_10_y"></span></td></tr>
+								<tr><td><input type="checkbox" id="keypoint_11" checked></td><td>leftHip</td><td><span id="keypoint_11_x"></span></td><td><span id="keypoint_11_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td><input type="checkbox" id="keypoint_12" checked></td><td>rightHip</td><td><span id="keypoint_12_x"></span></td><td><span id="keypoint_12_y"></span></td></tr>
+								<tr><td><input type="checkbox" id="keypoint_13"></td><td>leftKnee</td><td><span id="keypoint_13_x"></span></td><td><span id="keypoint_13_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td><input type="checkbox" id="keypoint_14"></td><td>rightKnee</td><td><span id="keypoint_14_x"></span></td><td><span id="keypoint_14_y"></span></td></tr>
+								<tr><td><input type="checkbox" id="keypoint_15"></td><td>leftAnkle</td><td><span id="keypoint_15_x"></span></td><td><span id="keypoint_15_y"></span></td></tr>
+								<tr style="background-color: #f2f2f2;"><td><input type="checkbox" id="keypoint_16"></td><td>rightAnkle</td><td><span id="keypoint_16_x"></span></td><td><span id="keypoint_16_y"></span></td></tr>
 								
 							</table>
 							
@@ -165,7 +192,12 @@
 
 						</td>				
 						
-					</tr>					
+					</tr>
+					<tr>
+						<td colspan="5">
+							<span id="video_position"></span>
+						</td>
+					</tr>
 				</table>
 				
 			</td>
