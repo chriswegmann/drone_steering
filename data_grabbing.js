@@ -12,12 +12,19 @@
 	var sample = [];
 	var all_samples = [];
 	var all_samples_json = '';
+	var counterVideos = [];
 
+	posenet
+	.load(multiplier)
+	.then(function(net) {
+	  if (!estimator) estimator = createEstimator(net);
+	})
+	.then((resp) => {
+	})
 
 	function getCoordinatesWebcam(modelType) {
 	// gets the coordinates for each snapshot of the webcam
 
-		var i = 0;
 		var interval = 200
 
 		startCamera();	
@@ -30,29 +37,52 @@
 	}
 
 
+	function loadVideos() {
+
+		if(document.getElementById("all_videos").checked) {
+			getCoordinatesAllVideos();
+		}
+		else {
+			var selectedVideo = document.getElementById("selected_video");
+			var videoId = String(selectedVideo.options[selectedVideo.selectedIndex].value);
+			getCoordinatesVideo(videoId);
+		}
+
+	}
+
 	function getCoordinatesAllVideos() {
-	// TODO: this should be made work with asynchronous functions
+		
+		var i = 1;
+	
 		var videos = [];
 		videos[0] = "001";
 		videos[1] = "002";
+		videos[2] = "003";
+		videos[3] = "004";
+		videos[4] = "005";
 
-		for (var i in videos) {
-			getCoordinatesVideo(videos[i]);
-		}		
+		var video = document.getElementById('video');
+
+		getCoordinatesVideo(videos[0]);
+
+		tid = setInterval(function() {
+	    	if (video.ended && (i < videos.length)) {
+				getCoordinatesVideo(videos[i]);
+	    		++i;
+	    	}
+	  	}, 1000);
 
 	}
 
 
-	function getCoordinatesVideo() {
+	function getCoordinatesVideo(videoId) {
 	// runs the video and gets the coordinates for each snapshot at a selected time interval as long as the video is running
 
-		var i = 0;
+		counterVideos[videoId] = 0;
 
 		var stepTime = document.getElementById("step_time");
 		var interval = stepTime.options[stepTime.selectedIndex].value;
 	  	var video = document.getElementById('video');
-		var selectedVideo = document.getElementById("selected_video");
-		var videoId = String(selectedVideo.options[selectedVideo.selectedIndex].value);
 		var videoName = "video_" + String(videoId);
 
 		loadLabels(videoId);
@@ -62,10 +92,10 @@
 
 	  	tid = setInterval(function() {
 	    	if (!video.ended && !video.paused) {
-	      		document.getElementById('count').innerHTML = i;
-	      		getCoordSnapshot(video, 'video');
+				document.getElementById('count').innerHTML = counterVideos[videoId];
+				getCoordSnapshot(video, 'video');
 				showLabel(video.currentTime);
-	    		++i;
+				++counterVideos[videoId];
 	    	}
 	  	}, interval);
 	  
@@ -75,38 +105,51 @@
   function getCoordSnapshot(imgData, sourceType, modelType='none') {
 	// gets to coordinates of imgData at the given time and store or display the information
 	
-    posenet
-      .load(multiplier)
-      .then(function(net) {
-        if (!estimator) estimator = createEstimator(net);
-        return estimator(imgData, imageScaleFactor, flipHorizontal, outputStride)
-      })
-      .then((resp) => {
+    estimator(imgData, imageScaleFactor, flipHorizontal, outputStride).then((resp) => {
       	
       	if (sourceType=='video') {
-			
-			j = 0;
 
-			for (i=0; i < 17; i++) {
-				if (document.getElementById("keypoint_" + i).checked) {
-					sample[j] = Math.round(resp.keypoints[i].position.x, 0) / 800;
-					document.getElementById("keypoint_" + i + "_x").innerHTML = sample[j];
-					j += 1;
-					sample[j] = Math.round(resp.keypoints[i].position.y, 0) / 800;
-					document.getElementById("keypoint_" + i + "_y").innerHTML = sample[j];
-					j += 1;
+			if(document.getElementById("posture").checked) {
+				j = 0;
+
+				sample.splice(0,sample.length);
+
+				for (i=0; i < 17; i++) {
+					if (document.getElementById("keypoint_" + i).checked) {
+						j = sample.push(Math.round(resp.keypoints[i].position.x, 0) / 800);
+						document.getElementById("keypoint_" + i + "_x").innerHTML = sample[j-1];
+						j = sample.push(Math.round(resp.keypoints[i].position.y, 0) / 800);
+						document.getElementById("keypoint_" + i + "_y").innerHTML = sample[j-1];
+
+						/*sample[j] = Math.round(resp.keypoints[i].position.x, 0) / 800;
+						document.getElementById("keypoint_" + i + "_x").innerHTML = sample[j];
+						j += 1;
+						sample[j] = Math.round(resp.keypoints[i].position.y, 0) / 800;
+						document.getElementById("keypoint_" + i + "_y").innerHTML = sample[j];
+						j += 1;*/
+					}
 				}
+
+				sample.push(getLabel(imgData.currentTime));
+				//sample[j] = getLabel(imgData.currentTime);
+					
+				sample_json = JSON.stringify(sample);
+				all_samples_json = all_samples_json + sample_json;
+
+				console.log(sample);
+
+				//console.log(resp.keypoints);
+
+				//store the coordinates locally in a log file (available under C:\Users\Christian\AppData\Local\Google\Chrome\User Data\Default\Local Storage\leveldb)
+				//position = JSON.stringify(resp);
+				//console.log(position);
+				//localStorage.position = localStorage.position + position;
+					
 			}
+			else {
 
-			sample[j] = getLabel(imgData.currentTime);
-				
-			sample_json = JSON.stringify(sample);
-			all_samples_json = all_samples_json + sample_json;
 
-			//store the coordinates locally in a log file (available under C:\Users\Christian\AppData\Local\Google\Chrome\User Data\Default\Local Storage\leveldb)
-			//position = JSON.stringify(resp);
-			//console.log(position);
-			//localStorage.position = localStorage.position + position;
+			}
 
 	      }
 
@@ -307,17 +350,6 @@
 
 		});
 
-
-		// old variant
-		//d3.csv("videos/" + video + ".csv").then(function(data) {
-
-		//	var i;
-		//	for (i = 0; i < data.length; i++) { 
-		//	    label[i] = parseInt(data[i]["label"]);
-		//	}
-
-		//});
-		
 	}
 
 
@@ -355,9 +387,40 @@
 	function getFeatures() {
 	// copies the samples (features and label) to the clipboard
 		
+		var part = []
+
+		part[0] = 'nose';
+		part[1] = 'leftEye';
+		part[2] = 'rightEye';
+		part[3] = 'leftEar';
+		part[4] = 'rightEar';
+		part[5] = 'leftShoulder';
+		part[6] = 'rightShoulder';
+		part[7] = 'leftElbow';
+		part[8] = 'rightElbow';
+		part[9] = 'leftWrist';
+		part[10] = 'rightWrist';
+		part[11] = 'leftHip';
+		part[12] = 'rightHip';
+		part[13] = 'leftKnee';
+		part[14] = 'rightKnee';
+		part[15] = 'leftAnkle';
+		part[16] = 'rightAnkle';
+
 		var all_samples_clipboard = all_samples_json.replace(/\]\[/g,"\n")
 		all_samples_clipboard = all_samples_clipboard.replace('[','')
 		all_samples_clipboard = all_samples_clipboard.replace(']','')
+
+		var header = '';
+		
+
+		for (i=0; i < 17; i++) {
+			if (document.getElementById("keypoint_" + i).checked) {
+				header = header + part[i] + "_x," + part[i] + "_y,";
+			}
+		}
+
+		all_samples_clipboard = header + "label\n" + all_samples_clipboard;
 
 		var copyText = document.getElementById("all_samples_clipboard");
 		copyText.style.display = "inline";
@@ -365,8 +428,46 @@
 		copyText.select();
 		document.execCommand("copy");
 		copyText.style.display = "none";
-		document.getElementById("clipboard_message").innerHTML = 'Data copied to clipboard.';
 
+		var fileName = '';
+		if(document.getElementById("all_videos").checked) {
+			fileName = 'all_videos_';	
+		}
+		else {
+			var selectedVideo = document.getElementById("selected_video");
+			var videoId = String(selectedVideo.options[selectedVideo.selectedIndex].value);
+			var fileName = "video_" + String(videoId) + '_';
+		}
+		(document.getElementById("posture").checked) ? fileName += 'posture_' : fileName += 'gesture_';
+		var stepTime = document.getElementById("step_time");
+		fileName += 'steptime' + String(stepTime.options[stepTime.selectedIndex].value) + '_checksum' + String(getPartsChecksum());
+
+		if (document.getElementById("gesture").checked) {
+			var seqLength = document.getElementById("seq_length");
+			fileName += '_seqlength' + String(seqLength.options[seqLength.selectedIndex].value);
+		}
+
+		fileName += '.csv';
+
+		document.getElementById("clipboard_message").innerHTML = 'Data copied to clipboard. Please copy it into a text file and save it as:';
+		document.getElementById("clipboard_filename").innerHTML = fileName;
+		
+	}
+
+
+	function getPartsChecksum() {
+		
+		var checkSum = 0;
+
+		for (i=0; i < 17; i++) {
+			if (document.getElementById("keypoint_" + i).checked) {
+				checkSum += Math.pow(2, i);
+			}
+		}
+
+		document.getElementById("checksum").innerHTML = checkSum;
+
+		return checkSum
 	}
 
 
