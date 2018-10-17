@@ -87,7 +87,8 @@
 
 		loadLabels(videoId);
 
-	  	video.src = 'videos/' + videoName + '.mp4';
+		video.src = 'videos/' + videoName + '.mp4';
+		//video.src = 'https://prometheonkickoff.sharepoint.com/drone_steering/' + videoName + '.mp4';
 		video.play();
 
 	  	tid = setInterval(function() {
@@ -411,6 +412,11 @@
 		all_samples_clipboard = all_samples_clipboard.replace('[','')
 		all_samples_clipboard = all_samples_clipboard.replace(']','')
 
+		var all_samples_clipboard_display = all_samples_json.replace(/\]\[/g,"<br>")
+		all_samples_clipboard_display = all_samples_clipboard_display.replace('[','')
+		all_samples_clipboard_display = all_samples_clipboard_display.replace(']','')
+
+
 		var header = '';
 		
 
@@ -421,6 +427,7 @@
 		}
 
 		all_samples_clipboard = header + "label\n" + all_samples_clipboard;
+		all_samples_clipboard_display = header + "label<br>" + all_samples_clipboard_display;
 
 		var copyText = document.getElementById("all_samples_clipboard");
 		copyText.style.display = "inline";
@@ -451,6 +458,7 @@
 
 		document.getElementById("clipboard_message").innerHTML = 'Data copied to clipboard. Please copy it into a text file and save it as:';
 		document.getElementById("clipboard_filename").innerHTML = fileName;
+		document.getElementById("all_samples_clipboard_display").innerHTML = all_samples_clipboard_display;
 		
 	}
 

@@ -9,11 +9,13 @@
 
 	<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
 	<script src="https://d3js.org/d3-fetch.v1.min.js"></script>
-  	<script src="https://unpkg.com/@tensorflow/tfjs"></script>
-  	<!--<script src="https://unpkg.com/@tensorflow-models/posenet"></script>-->
+	<script src="https://unpkg.com/@tensorflow/tfjs"></script>
+	<!--<script src="bower_components/tfjs"></script>-->
+	<!--<script src="https://unpkg.com/@tensorflow-models/posenet"></script>-->
 	<!--<script src="https://unpkg.com/@tensorflow-models/posenet@0.2.3/dist/posenet.min.js"></script>-->
-	<script src="posenet/posenet.min.js"></script>
+	<!--<script src="@tensorflow/tfjs"></script>-->
 	<!--<script src="tfjs/tf.min.js"></script>-->
+	<script src="posenet/posenet.min.js"></script>
 	<script src="data_grabbing.js"></script>
 
 	<link href="https://fonts.googleapis.com/css?family=Bai+Jamjuree" rel="stylesheet">
@@ -211,6 +213,7 @@
 				<p><span id="clipboard_message"></span></p>
 				<p><i><span id="clipboard_filename"></span></i></p>
 				<textarea id="all_samples_clipboard" style="display:none;" rows="4" cols="50"></textarea>
+				<p><span id="all_samples_clipboard_display"></span></p>
 			</td>
 			<td></td>
 		</tr>
