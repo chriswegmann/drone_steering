@@ -4,7 +4,7 @@ We use the PoseNet model as the basis to steer a drone using gestures recorded b
 
 ![Supported gestures](https://drone-steering.azurewebsites.net/images/summary.png)
 
-These gestures are currently only static postures, meaning once you move your hands in the right position we detect it and send the signal. In a next step we will add dynamic gestures, e.g. performing a loop with your hands will mean the drone will also make a loop; see separate section below for a more detailed discussion of this topic.
+These gestures are currently only static postures, meaning once you move your hands in the right position we detect it and send the signal. We encode the momements as [stop, left, right, up, down] to [0, 1, 2, 3, 4].In a next step we will add dynamic gestures, e.g. performing a loop with your hands will mean the drone will also make a loop; see separate section below for a more detailed discussion of this topic.
 
 To support this, we will train a machine learning model on top of the PoseNet model. This will involve streaming input data and detecting the patterns to come up with the classification (e.g. loop, land or take picture) and a steering module to transmit signals to a drone.
 
