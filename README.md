@@ -42,6 +42,15 @@ We are currently evaluating the best approach for a gesture model. For simplicit
 
 Alternatives appear to be Hidden Markov Models (HMM), Long Short-Term Memory Models (LSTM) or a hybrid of HMM and Convolutional Neural Networks (CNN) or Recurrent Neural Networks (RNN). From a superficial reading all these support time-dependent pattern (and thus gesture) recognition.
 
+References
+https://arxiv.org/pdf/1506.01911.pdf
+https://www.sciencedirect.com/science/article/pii/S1877750317312632
+https://arxiv.org/pdf/1707.03692.pdf
+https://arxiv.org/pdf/1802.09901.pdf
+https://arxiv.org/pdf/1712.10136.pdf
+https://github.com/udacity/CVND---Gesture-Recognition
+https://github.com/hthuwal/sign-language-gesture-recognition
+
 
 ### Todos
 * [Pascal] Research drone models (criteria: easy to steer / access video from computer)
