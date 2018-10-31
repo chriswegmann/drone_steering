@@ -1,175 +1,163 @@
-	const multiplier = 0.5;
-  	const imageScaleFactor = 0.5;
-  	const flipHorizontal = false;
-  	const outputStride = 8;
-	const videoWidth = 800;
-	const videoHeight = 555;
+const multiplier = 0.5;
+const imageScaleFactor = 0.5;
+const flipHorizontal = false;
+const outputStride = 8;
+const videoWidth = 800;
+const videoHeight = 555;
 
-	let estimator = null;
-  	localStorage.position = ''
+let estimator = null;
+localStorage.position = ''
 
-	var label = [];
-	var sample = [];
-	var all_samples = [];
-	var all_samples_json = '';
-	var counterVideos = [];
+var label = [];
+var gestureSnapshots = [];
+var all_samples = [];
+var all_samples_json = '';
+var counterVideos = [];
 
-	posenet
-	.load(multiplier)
-	.then(function(net) {
-	  if (!estimator) estimator = createEstimator(net);
-	})
-	.then((resp) => {
-	})
-
-	function getCoordinatesWebcam(modelType) {
-	// gets the coordinates for each snapshot of the webcam
-
-		var interval = 200
-
-		startCamera();	
-		video = document.getElementById('video');
-
-	  	tid = setInterval(function() {
-	    	getCoordSnapshot(video, 'webcam', modelType);
-	  	}, interval);
-
-	}
+posenet
+.load(multiplier)
+.then(function(net) {
+	if (!estimator) estimator = createEstimator(net);
+})
+.then((resp) => {
+})
 
 
-	function loadVideos() {
+function getCoordinatesWebcam(modelType) {
+// gets the coordinates for each snapshot of the webcam
 
-		if(document.getElementById("all_videos").checked) {
-			getCoordinatesAllVideos();
+	var interval = 200
+
+	startCamera();	
+
+	video = document.getElementById('video');
+
+	tid = setInterval(function() {
+		getCoordSnapshot(sourceId=video,
+						 sourceType='webcam',
+						 modelType=modelType,
+						 steeringType='posture'
+						 );
+	}, interval);
+
+}
+
+
+function getCoordinatesAllVideos() {
+// loops through all videos and gets the coordinates for each of them
+	
+	var i = 1;
+
+	var videos = [];
+	videos[0] = "001";
+	videos[1] = "002";
+	videos[2] = "003";
+	videos[3] = "004";
+	videos[4] = "005";
+
+	var video = document.getElementById('video');
+
+	getCoordinatesVideo(videos[0]);
+
+	tid = setInterval(function() {
+		if (video.ended && (i < videos.length)) {
+			getCoordinatesVideo(videos[i]);
+			++i;
 		}
-		else {
-			var selectedVideo = document.getElementById("selected_video");
-			var videoId = String(selectedVideo.options[selectedVideo.selectedIndex].value);
-			getCoordinatesVideo(videoId);
+	}, 1000);
+
+}
+
+
+function getCoordinatesVideo(videoId) {
+// runs the video and gets the coordinates for each snapshot at a selected time interval as long as the video is running
+
+	counterVideos[videoId] = 0;
+
+	var stepTime = document.getElementById("step_time");
+	var interval = stepTime.options[stepTime.selectedIndex].value;
+	var seqLength = document.getElementById("seq_length");
+	var snapshotsPerGesture = seqLength.options[seqLength.selectedIndex].value / interval;
+	var steeringType = (document.getElementById("posture").checked) ? 'posture' : 'gesture';
+
+	var video = document.getElementById('video');
+	var videoName = "video_" + String(videoId);
+
+	loadLabels(videoId);
+
+	video.src = 'videos/' + videoName + '.mp4';
+	//video.src = 'https://prometheonkickoff.sharepoint.com/drone_steering/' + videoName + '.mp4';
+	video.play();
+
+	tid = setInterval(function() {
+		if (!video.ended && !video.paused) {
+			document.getElementById('count').innerHTML = counterVideos[videoId];
+			getCoordSnapshot(sourceId=video, 
+							 sourceType='video', 
+							 modelType='none', 
+							 steeringType=steeringType, 
+							 snapshotsPerGesture=snapshotsPerGesture);
+			showLabel(video.currentTime);
+			++counterVideos[videoId];
 		}
+	}, interval);
+	
+}
 
-	}
 
-	function getCoordinatesAllVideos() {
+function getCoordSnapshot(sourceId, sourceType, modelType='none', steeringType='posture', snapshotsPerGesture = 1) {
+// gets the coordinates of an image at sourceId and either stores (for sourceType='video') or estimates (for sourceType='webcam') them
+
+	estimator(sourceId, imageScaleFactor, flipHorizontal, outputStride).then((resp) => {
 		
-		var i = 1;
-	
-		var videos = [];
-		videos[0] = "001";
-		videos[1] = "002";
-		videos[2] = "003";
-		videos[3] = "004";
-		videos[4] = "005";
+		if (sourceType=='video') {
 
-		var video = document.getElementById('video');
+			var sample = [];
 
-		getCoordinatesVideo(videos[0]);
-
-		tid = setInterval(function() {
-	    	if (video.ended && (i < videos.length)) {
-				getCoordinatesVideo(videos[i]);
-	    		++i;
-	    	}
-	  	}, 1000);
-
-	}
-
-
-	function getCoordinatesVideo(videoId) {
-	// runs the video and gets the coordinates for each snapshot at a selected time interval as long as the video is running
-
-		counterVideos[videoId] = 0;
-
-		var stepTime = document.getElementById("step_time");
-		var interval = stepTime.options[stepTime.selectedIndex].value;
-	  	var video = document.getElementById('video');
-		var videoName = "video_" + String(videoId);
-
-		loadLabels(videoId);
-
-		video.src = 'videos/' + videoName + '.mp4';
-		//video.src = 'https://prometheonkickoff.sharepoint.com/drone_steering/' + videoName + '.mp4';
-		video.play();
-
-	  	tid = setInterval(function() {
-	    	if (!video.ended && !video.paused) {
-				document.getElementById('count').innerHTML = counterVideos[videoId];
-				getCoordSnapshot(video, 'video');
-				showLabel(video.currentTime);
-				++counterVideos[videoId];
-	    	}
-	  	}, interval);
-	  
-	}
-  
-  
-  function getCoordSnapshot(imgData, sourceType, modelType='none') {
-	// gets to coordinates of imgData at the given time and store or display the information
-	
-    estimator(imgData, imageScaleFactor, flipHorizontal, outputStride).then((resp) => {
-      	
-      	if (sourceType=='video') {
-
-			if(document.getElementById("posture").checked) {
-				j = 0;
-
-				sample.splice(0,sample.length);
-
-				for (i=0; i < 17; i++) {
-					if (document.getElementById("keypoint_" + i).checked) {
-						j = sample.push(Math.round(resp.keypoints[i].position.x, 0) / 800);
-						document.getElementById("keypoint_" + i + "_x").innerHTML = sample[j-1];
-						j = sample.push(Math.round(resp.keypoints[i].position.y, 0) / 800);
-						document.getElementById("keypoint_" + i + "_y").innerHTML = sample[j-1];
-
-						/*sample[j] = Math.round(resp.keypoints[i].position.x, 0) / 800;
-						document.getElementById("keypoint_" + i + "_x").innerHTML = sample[j];
-						j += 1;
-						sample[j] = Math.round(resp.keypoints[i].position.y, 0) / 800;
-						document.getElementById("keypoint_" + i + "_y").innerHTML = sample[j];
-						j += 1;*/
-					}
+			for (i=0; i < 17; i++) {
+				if (document.getElementById("keypoint_" + i).checked) {
+					j = sample.push(Math.round(resp.keypoints[i].position.x, 0) / 800);
+					document.getElementById("keypoint_" + i + "_x").innerHTML = sample[j-1];
+					j = sample.push(Math.round(resp.keypoints[i].position.y, 0) / 800);
+					document.getElementById("keypoint_" + i + "_y").innerHTML = sample[j-1];
 				}
-
-				sample.push(getLabel(imgData.currentTime));
-				//sample[j] = getLabel(imgData.currentTime);
-					
-				sample_json = JSON.stringify(sample);
-				all_samples_json = all_samples_json + sample_json;
-
-				console.log(sample);
-
-				//console.log(resp.keypoints);
-
-				//store the coordinates locally in a log file (available under C:\Users\Christian\AppData\Local\Google\Chrome\User Data\Default\Local Storage\leveldb)
-				//position = JSON.stringify(resp);
-				//console.log(position);
-				//localStorage.position = localStorage.position + position;
-					
-			}
-			else {
-
-
 			}
 
-	      }
+			if (steeringType=='posture') {
+				sample.push(getLabel(sourceId.currentTime));
+				all_samples_json = all_samples_json + JSON.stringify(sample);
+			}
 
-      	if (sourceType=='webcam') {
+			if (steeringType=='gesture') {
+				if (gestureSnapshots.length>snapshotsPerGesture) {
+					gestureSnapshots.splice(0, 1);               // drop oldest snapshot
+				}
+				gestureSnapshots.splice(-1, 1);                  // drop previous label
+				gestureSnapshots.push(sample);                   // add new snapshot
+				var label = [getLabel(sourceId.currentTime)]
+				gestureSnapshots.push(label);                    // add new label
+				if (gestureSnapshots.length>snapshotsPerGesture) {
+					all_samples_json = all_samples_json + JSON.stringify(gestureSnapshots);
+				}
+			}
+		}
+
+		if (sourceType=='webcam') {
 						
-	      	var direction = 'stop.png'
-      		
-           	var leftShoulder_x = Math.round(resp.keypoints[5].position.x);
-            var leftShoulder_y = Math.round(resp.keypoints[5].position.y);
-            var rightShoulder_x = Math.round(resp.keypoints[6].position.x);
-            var rightShoulder_y = Math.round(resp.keypoints[6].position.y);
-            var leftElbow_x = Math.round(resp.keypoints[7].position.x);
-            var leftElbow_y = Math.round(resp.keypoints[7].position.y);
-            var rightElbow_x = Math.round(resp.keypoints[8].position.x);
-            var rightElbow_y = Math.round(resp.keypoints[8].position.y);
-            var leftWrist_x = Math.round(resp.keypoints[9].position.x);
-            var leftWrist_y = Math.round(resp.keypoints[9].position.y);
-            var rightWrist_x = Math.round(resp.keypoints[10].position.x);
-            var rightWrist_y = Math.round(resp.keypoints[10].position.y);
+			var direction = 'stop.png'
+			
+			var leftShoulder_x = Math.round(resp.keypoints[5].position.x);
+			var leftShoulder_y = Math.round(resp.keypoints[5].position.y);
+			var rightShoulder_x = Math.round(resp.keypoints[6].position.x);
+			var rightShoulder_y = Math.round(resp.keypoints[6].position.y);
+			var leftElbow_x = Math.round(resp.keypoints[7].position.x);
+			var leftElbow_y = Math.round(resp.keypoints[7].position.y);
+			var rightElbow_x = Math.round(resp.keypoints[8].position.x);
+			var rightElbow_y = Math.round(resp.keypoints[8].position.y);
+			var leftWrist_x = Math.round(resp.keypoints[9].position.x);
+			var leftWrist_y = Math.round(resp.keypoints[9].position.y);
+			var rightWrist_x = Math.round(resp.keypoints[10].position.x);
+			var rightWrist_y = Math.round(resp.keypoints[10].position.y);
 
 			if (modelType=='deltas') {
 
@@ -238,18 +226,18 @@
 				sample_predict = new Array(1)
 				sample_predict[0] = new Array(12)
 
-				sample_predict[0][0] = leftShoulder_x;
-				sample_predict[0][1] = leftShoulder_y;
-				sample_predict[0][2] = rightShoulder_x;
-				sample_predict[0][3] = rightShoulder_y;
-				sample_predict[0][4] = leftElbow_x;
-				sample_predict[0][5] = leftElbow_y;
-				sample_predict[0][6] = rightElbow_x;
-				sample_predict[0][7] = rightElbow_y;
-				sample_predict[0][8] = leftWrist_x;
-				sample_predict[0][9] = leftWrist_y;
-				sample_predict[0][10] = rightWrist_x;
-				sample_predict[0][11] = rightWrist_y;
+				sample_predict[0][0] = leftShoulder_x / 800;;
+				sample_predict[0][1] = leftShoulder_y / 800;;
+				sample_predict[0][2] = rightShoulder_x / 800;;
+				sample_predict[0][3] = rightShoulder_y / 800;;
+				sample_predict[0][4] = leftElbow_x / 800;;
+				sample_predict[0][5] = leftElbow_y / 800;;
+				sample_predict[0][6] = rightElbow_x / 800;;
+				sample_predict[0][7] = rightElbow_y / 800;;
+				sample_predict[0][8] = leftWrist_x / 800;;
+				sample_predict[0][9] = leftWrist_y / 800;;
+				sample_predict[0][10] = rightWrist_x / 800;;
+				sample_predict[0][11] = rightWrist_y / 800;;
 
 				predictFromModel(sample_predict);
 				
@@ -267,257 +255,294 @@
 			document.getElementById("leftWrist_y").innerHTML = leftWrist_y;
 			document.getElementById("rightWrist_x").innerHTML = rightWrist_x;
 			document.getElementById("rightWrist_y").innerHTML = rightWrist_y;
-      	}
-
-      })
-  }
-
-
-  function createEstimator(net) {
-  // creates an estimator from PoseNet
-  
-    return function (imageElement, scaleFactor, flipHorizontal, outputStride) {
-      return net.estimateSinglePose(imageElement, scaleFactor, flipHorizontal, outputStride);
-    }
-  }  
-
-
-	function sleep(milliseconds) {
-	// pauses the execution of the script by the passed-on milliseconds
-
-	  var start = new Date().getTime();
-	  for (var i = 0; i < 1e7; i++) {
-	    if ((new Date().getTime() - start) > milliseconds){
-	      break;
-	    }
-	  }
-	}
-
-
-	async function setupCamera() {
-	// loads the camera to be used in the demo
-
-	  const video = document.getElementById('video');
-	  video.width = videoWidth;
-	  video.height = videoHeight;
-
-	  const stream = await navigator.mediaDevices.getUserMedia({
-	    'audio': false,
-	    'video': {
-	      facingMode: 'user',
-	      width: videoWidth,
-	      height: videoHeight
-	    }
-	  });
-	  video.srcObject = stream;
-
-		return video;
-
-	}
-
-	async function startCamera() {
-	// starts the webcam of the user
-	
-	  const video = await setupCamera();
-	  video.play();
-
-		return video;
-		
-	}
-	
-
-	function getLabel(videoTime) {
-		for (var i in label) {
-			if ((videoTime > label[i][0] & videoTime < label[i][1])) {
-				//document.getElementById("video_position").innerHTML = String(videoTime) + ': ' + String(label[i][2]) + ' | ' + String(label[i][0]) + ' | ' + String(label[i][1]);
-				return label[i][2];
-			}
 		}
 
+	})
+}
+
+
+function createEstimator(net) {
+// creates an estimator from PoseNet
+
+return function (imageElement, scaleFactor, flipHorizontal, outputStride) {
+	return net.estimateSinglePose(imageElement, scaleFactor, flipHorizontal, outputStride);
+}
+}  
+
+
+function sleep(milliseconds) {
+// pauses the execution of the script by the passed-on milliseconds
+
+	var start = new Date().getTime();
+	for (var i = 0; i < 1e7; i++) {
+	if ((new Date().getTime() - start) > milliseconds){
+		break;
+	}
+	}
+}
+
+
+function loadVideos() {
+
+	if(document.getElementById("all_videos").checked) {
+		getCoordinatesAllVideos();
+	}
+	else {
+		var selectedVideo = document.getElementById("selected_video");
+		var videoId = String(selectedVideo.options[selectedVideo.selectedIndex].value);
+		getCoordinatesVideo(videoId);
 	}
 
-	function loadLabels(videoId)	{
-	// loads the labels of a video into the 'label' array
+}
 
-		d3.csv("videos/labels_" + videoId + ".csv").then(function(data) {
 
-			var i;
-			for (i = 0; i < data.length; i++) { 
-				label[i] = [];
-				label[i][0] = parseFloat(data[i]["from"]);
-				label[i][1] = parseFloat(data[i]["to"]);
-				label[i][2] = parseInt(data[i]["label"]);
-			}
+async function setupCamera() {
+// loads the camera to be used in the demo
 
-		});
+	const video = document.getElementById('video');
+	video.width = videoWidth;
+	video.height = videoHeight;
 
+	const stream = await navigator.mediaDevices.getUserMedia({
+	'audio': false,
+	'video': {
+		facingMode: 'user',
+		width: videoWidth,
+		height: videoHeight
 	}
+	});
+	video.srcObject = stream;
+
+	return video;
+
+}
 
 
-	function showLabel(videoTime) {
-	// displays the image (left, right etc.) corresponding to a label
-			
-		var img_src = 'stop.png';
-		var labelId = getLabel(videoTime)
-		
-		switch(labelId) {
-		    case 0: // stop
-		        img_src = 'stop.png';
-		        break;
-		    case 1: // left
-		        img_src = 'left.png';
-		        break;
-		    case 2: // right
-		        img_src = 'right.png';
-		        break;
-		    case 3: // up
-		        img_src = 'up.png';
-		        break;
-		    case 4: // down
-		        img_src = 'down.png';
-		        break;
-		    default:
-		        img_src = 'stop.png';
-		}		
-		
-		document.getElementById("label_display").src = "images/" + img_src;	
-		
-	}
+async function startCamera() {
+// starts the webcam of the user
+
+	const video = await setupCamera();
+	video.play();
+
+	return video;
 	
+}
+
+
+function getLabel(videoTime) {
+	for (var i in label) {
+		if ((videoTime > label[i][0] & videoTime < label[i][1])) {
+			//document.getElementById("video_position").innerHTML = String(videoTime) + ': ' + String(label[i][2]) + ' | ' + String(label[i][0]) + ' | ' + String(label[i][1]);
+			return label[i][2];
+		}
+	}
+
+}
+
+
+function loadLabels(videoId)	{
+// loads the labels of a video into the 'label' array
+
+	d3.csv("videos/labels_" + videoId + ".csv").then(function(data) {
+
+		var i;
+		for (i = 0; i < data.length; i++) { 
+			label[i] = [];
+			label[i][0] = parseFloat(data[i]["from"]);
+			label[i][1] = parseFloat(data[i]["to"]);
+			label[i][2] = parseInt(data[i]["label"]);
+		}
+
+	});
+
+}
+
+
+function showLabel(videoTime) {
+// displays the image (left, right etc.) corresponding to a label
+		
+	var img_src = 'stop.png';
+	var labelId = getLabel(videoTime)
 	
-	function getFeatures() {
-	// copies the samples (features and label) to the clipboard
-		
-		var part = []
-
-		part[0] = 'nose';
-		part[1] = 'leftEye';
-		part[2] = 'rightEye';
-		part[3] = 'leftEar';
-		part[4] = 'rightEar';
-		part[5] = 'leftShoulder';
-		part[6] = 'rightShoulder';
-		part[7] = 'leftElbow';
-		part[8] = 'rightElbow';
-		part[9] = 'leftWrist';
-		part[10] = 'rightWrist';
-		part[11] = 'leftHip';
-		part[12] = 'rightHip';
-		part[13] = 'leftKnee';
-		part[14] = 'rightKnee';
-		part[15] = 'leftAnkle';
-		part[16] = 'rightAnkle';
-
-		var all_samples_clipboard = all_samples_json.replace(/\]\[/g,"\n")
-		all_samples_clipboard = all_samples_clipboard.replace('[','')
-		all_samples_clipboard = all_samples_clipboard.replace(']','')
-
-		var all_samples_clipboard_display = all_samples_json.replace(/\]\[/g,"<br>")
-		all_samples_clipboard_display = all_samples_clipboard_display.replace('[','')
-		all_samples_clipboard_display = all_samples_clipboard_display.replace(']','')
+	switch(labelId) {
+		case 0: // stop
+			img_src = 'stop.png';
+			break;
+		case 1: // left
+			img_src = 'left.png';
+			break;
+		case 2: // right
+			img_src = 'right.png';
+			break;
+		case 3: // up
+			img_src = 'up.png';
+			break;
+		case 4: // down
+			img_src = 'down.png';
+			break;
+		default:
+			img_src = 'stop.png';
+	}		
+	
+	document.getElementById("label_display").src = "images/" + img_src;	
+	
+}
 
 
-		var header = '';
-		
+function getFeatures() {
+// copies the samples (features and label) to the clipboard
+	
+	var part = []
 
-		for (i=0; i < 17; i++) {
+	part[0] = 'nose';
+	part[1] = 'leftEye';
+	part[2] = 'rightEye';
+	part[3] = 'leftEar';
+	part[4] = 'rightEar';
+	part[5] = 'leftShoulder';
+	part[6] = 'rightShoulder';
+	part[7] = 'leftElbow';
+	part[8] = 'rightElbow';
+	part[9] = 'leftWrist';
+	part[10] = 'rightWrist';
+	part[11] = 'leftHip';
+	part[12] = 'rightHip';
+	part[13] = 'leftKnee';
+	part[14] = 'rightKnee';
+	part[15] = 'leftAnkle';
+	part[16] = 'rightAnkle';
+
+	var all_samples_clipboard = all_samples_json.replace(/\]\[/g,"\n");
+	all_samples_clipboard = all_samples_clipboard.replace(/\[/g,'');
+	all_samples_clipboard = all_samples_clipboard.replace(/\]/g,'');
+
+	var all_samples_clipboard_display = all_samples_json.replace(/\]\[/g,"<br>");
+	all_samples_clipboard_display = all_samples_clipboard_display.replace(/\[/g,'');
+	all_samples_clipboard_display = all_samples_clipboard_display.replace(/\]/g,'');
+
+	var header = '';
+
+	if (document.getElementById("gesture").checked) {
+		var stepTime = document.getElementById("step_time");
+		var interval = stepTime.options[stepTime.selectedIndex].value;
+		var seqLength = document.getElementById("seq_length");
+		var snapshotsPerGesture = seqLength.options[seqLength.selectedIndex].value / interval;
+
+		for (k=0; k<snapshotsPerGesture; k++) {
+			for (i=0; i<17; i++) {
+				if (document.getElementById("keypoint_" + i).checked) {
+					header = header + part[i] + "_x_" + k + "," + part[i] + "_y_" + k + ",";
+				}
+			}		
+		}
+	}
+	else {
+		for (i=0; i<17; i++) {
 			if (document.getElementById("keypoint_" + i).checked) {
 				header = header + part[i] + "_x," + part[i] + "_y,";
 			}
-		}
-
-		all_samples_clipboard = header + "label\n" + all_samples_clipboard;
-		all_samples_clipboard_display = header + "label<br>" + all_samples_clipboard_display;
-
-		var copyText = document.getElementById("all_samples_clipboard");
-		copyText.style.display = "inline";
-		copyText.value = all_samples_clipboard;
-		copyText.select();
-		document.execCommand("copy");
-		copyText.style.display = "none";
-
-		var fileName = '';
-		if(document.getElementById("all_videos").checked) {
-			fileName = 'all_videos_';	
-		}
-		else {
-			var selectedVideo = document.getElementById("selected_video");
-			var videoId = String(selectedVideo.options[selectedVideo.selectedIndex].value);
-			var fileName = "video_" + String(videoId) + '_';
-		}
-		(document.getElementById("posture").checked) ? fileName += 'posture_' : fileName += 'gesture_';
-		var stepTime = document.getElementById("step_time");
-		fileName += 'steptime' + String(stepTime.options[stepTime.selectedIndex].value) + '_checksum' + String(getPartsChecksum());
-
-		if (document.getElementById("gesture").checked) {
-			var seqLength = document.getElementById("seq_length");
-			fileName += '_seqlength' + String(seqLength.options[seqLength.selectedIndex].value);
-		}
-
-		fileName += '.csv';
-
-		document.getElementById("clipboard_message").innerHTML = 'Data copied to clipboard. Please copy it into a text file and save it as:';
-		document.getElementById("clipboard_filename").innerHTML = fileName;
-		document.getElementById("all_samples_clipboard_display").innerHTML = all_samples_clipboard_display;
-		
+		}	
 	}
 
+	all_samples_clipboard = header + "label\n" + all_samples_clipboard;
+	all_samples_clipboard_display = header + "label<br>" + all_samples_clipboard_display;
 
-	function getPartsChecksum() {
-		
-		var checkSum = 0;
+	// copy data to clipboard
+	var copyText = document.getElementById("all_samples_clipboard");
+	copyText.style.display = "inline";
+	copyText.value = all_samples_clipboard;
+	copyText.select();
+	document.execCommand("copy");
+	copyText.style.display = "none";
 
-		for (i=0; i < 17; i++) {
-			if (document.getElementById("keypoint_" + i).checked) {
-				checkSum += Math.pow(2, i);
-			}
-		}
-
-		document.getElementById("checksum").innerHTML = checkSum;
-
-		return checkSum
-	}
-
-
-	async function predictFromModel(sample)	{
-	// predicts the direction from a sample using the model trained in keras
+	// show data on page
+	document.getElementById("clipboard_message").innerHTML = 'Data copied to clipboard. Please copy it into a text file and save it as:';
+	document.getElementById("clipboard_filename").innerHTML = getFileName();
+	document.getElementById("all_samples_clipboard_display").innerHTML = all_samples_clipboard_display;
 	
-		sample_tensor = tf.tensor(sample);
-		console.log(sample_tensor);
+}
 
-		const model = await tf.loadModel('model_tfjs/model.json');
-		predicted = model.predict(sample_tensor)
-		const values = predicted.dataSync();
-		const arr = Array.from(values);
 
-		document.getElementById("stop").innerHTML = arr[0];
-		document.getElementById("left").innerHTML = arr[1];
-		document.getElementById("right").innerHTML = arr[2];
-		document.getElementById("up").innerHTML = arr[3];
-		document.getElementById("down").innerHTML = arr[4];
+function getFileName() {
 
+	var fileName = '';
+	if(document.getElementById("all_videos").checked) {
+		fileName = 'all_videos_';	
+	}
+	else {
+		var selectedVideo = document.getElementById("selected_video");
+		var videoId = String(selectedVideo.options[selectedVideo.selectedIndex].value);
+		var fileName = "video_" + String(videoId) + '_';
+	}
+	(document.getElementById("posture").checked) ? fileName += 'posture_' : fileName += 'gesture_';
+	var stepTime = document.getElementById("step_time");
+	fileName += 'steptime' + String(stepTime.options[stepTime.selectedIndex].value) + '_checksum' + String(getPartsChecksum());
+
+	if (document.getElementById("gesture").checked) {
+		var seqLength = document.getElementById("seq_length");
+		fileName += '_seqlength' + String(seqLength.options[seqLength.selectedIndex].value);
 	}
 
+	fileName += '.csv';
 
-	function enableDisableVideoSelection() {
-		select = document.getElementById("selected_video");
-		if (select.disabled) {
-			select.disabled = 0
-		}
-		else {
-			select.disabled = 1
+	return fileName;
+}
+
+function getPartsChecksum() {
+	
+	var checkSum = 0;
+
+	for (i=0; i < 17; i++) {
+		if (document.getElementById("keypoint_" + i).checked) {
+			checkSum += Math.pow(2, i);
 		}
 	}
 
+	document.getElementById("checksum").innerHTML = checkSum;
 
-	function showHideSeqLength() {
-		//alert(document.getElementById("posture").checked);
-		if (document.getElementById("posture").checked) {
-			document.getElementById("seq_length").style.display = "none";
-			document.getElementById("seq_length_label").innerHTML = "";
-		}
-		else {
-			document.getElementById("seq_length").style.display = "inline";
-			document.getElementById("seq_length_label").innerHTML = "Sequence Length:";
-		}
+	return checkSum
+}
+
+
+async function predictFromModel(sample)	{
+// predicts the direction from a sample using the model trained in keras
+
+	sample_tensor = tf.tensor(sample);
+	console.log(sample_tensor);
+
+	const model = await tf.loadModel('model_tfjs/model.json');
+	predicted = model.predict(sample_tensor)
+	const values = predicted.dataSync();
+	const arr = Array.from(values);
+
+	document.getElementById("stop").innerHTML = arr[0];
+	document.getElementById("left").innerHTML = arr[1];
+	document.getElementById("right").innerHTML = arr[2];
+	document.getElementById("up").innerHTML = arr[3];
+	document.getElementById("down").innerHTML = arr[4];
+
+}
+
+
+function enableDisableVideoSelection() {
+	select = document.getElementById("selected_video");
+	if (select.disabled) {
+		select.disabled = 0
 	}
+	else {
+		select.disabled = 1
+	}
+}
+
+
+function showHideSeqLength() {
+	//alert(document.getElementById("posture").checked);
+	if (document.getElementById("posture").checked) {
+		document.getElementById("seq_length").style.display = "none";
+		document.getElementById("seq_length_label").innerHTML = "";
+	}
+	else {
+		document.getElementById("seq_length").style.display = "inline";
+		document.getElementById("seq_length_label").innerHTML = "Sequence Length:";
+	}
+}
