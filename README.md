@@ -11,7 +11,7 @@ To support this, we will train a machine learning model on top of the PoseNet mo
 ![Model architecture](https://drone-steering.azurewebsites.net/images/architecture.png)
 
 Let us look at the above modules a bit more in detail:
-* The webcam films the user and feeds the video signal to the PoseNet model. The PoseNet model outputs x/y coordinates of various body parts.
+* The webcam films the user and feeds the video signal to the PoseNet model. The PoseNet model outputs x/y coordinates of various body parts. It then broadcasts this information via websocket.
 * These x/y coordinates are the input into a gesture detection model. This model translates the x/y coordinates (and patterns within these) into commands that can be understood by the drone.
 * The steering module then transmits the commands through wifi to the drone.
 
