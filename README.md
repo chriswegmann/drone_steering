@@ -51,11 +51,17 @@ https://arxiv.org/pdf/1712.10136.pdf
 https://github.com/udacity/CVND---Gesture-Recognition
 https://github.com/hthuwal/sign-language-gesture-recognition
 
+### How to Start
+You need the 'PoseNet for Installations', available [here](https://github.com/oveddan/posenet-for-installations). 
+You need to clone it to your local drive (and install _node.js_ and _yarn_ in case you don't have them yet). 
+Then just follow the instructions in their _Usage_ section.
+
+Then you need to run the ```websocket.py``` - this will set up a websocket server, by default on port 8081.
+Once you have it up and running you can switch back to the PoseNet website and connect to the websocket server and
+start the webcam and pose detection. This should result in the model detecting your postures / gestures and displaying
+them in the shell.
 
 ### Todos
-* [Pascal] Research drone models (criteria: easy to steer / access video from computer)
-* [All] Generate training data for posture model (stop, up, down, left, right)
-* [Laleh] Train posture model such that it detects existing postures reliably
 * [Pascal or Christian] Implement steering module
 * [Christian and Pascal] Research which modelling approach is most suitable for the gesture model
 * [tbd] Generate training data for gesture model

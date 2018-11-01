@@ -510,7 +510,7 @@ async function predictFromModel(sample)	{
 	sample_tensor = tf.tensor(sample);
 	console.log(sample_tensor);
 
-	const model = await tf.loadModel('model_tfjs/model.json');
+	const model = await tf.loadModel('model/model.json');
 	predicted = model.predict(sample_tensor)
 	const values = predicted.dataSync();
 	const arr = Array.from(values);
