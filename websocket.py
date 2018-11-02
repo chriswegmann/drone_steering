@@ -15,8 +15,8 @@ x_cols = ['leftShoulder_x','rightShoulder_x','leftElbow_x','rightElbow_x','leftW
 y_cols = ['leftShoulder_y','rightShoulder_y','leftElbow_y','rightElbow_y','leftWrist_y','rightWrist_y','leftHip_y','rightHip_y']
 processing_pipeline = make_pipeline(XCentralizer(x_cols),YCentralizer(y_cols),YScaler(),Shuffler())
 
-
 async def consumer_handler(websocket, path):
+    print('Accepting incoming poses.')
     async for pose in websocket:
         # print_pose(pose)
         predict_label(pose)
@@ -59,6 +59,7 @@ def print_pose(pose):
 
 
 start_server = websockets.serve(consumer_handler, 'localhost', 8081)
+print('Websocket server started.')
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()

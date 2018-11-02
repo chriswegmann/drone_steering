@@ -11,11 +11,21 @@ To support this, we will train a machine learning model on top of the PoseNet mo
 ![Model architecture](https://drone-steering.azurewebsites.net/images/architecture.png)
 
 Let us look at the above modules a bit more in detail:
-* The webcam films the user and feeds the video signal to the PoseNet model. The PoseNet model outputs x/y coordinates of various body parts. It then broadcasts this information via websocket.
-* These x/y coordinates are the input into a gesture detection model. This model translates the x/y coordinates (and patterns within these) into commands that can be understood by the drone.
-* The steering module then transmits the commands through wifi to the drone.
+* The PoseNet model runs on a local node.js server. The user records video using the browser which connects to the server. The server then broadcasts the wireframe (i.e. the x/y coordinates of various body parts) via web socket.
+* The web socket server runs in Python and receives the broadcasted wireframe data. Upon receiving, the server feeds the wireframe into a gesture detection model. This model translates the x/y coordinates (and patterns within these) into commands that can be understood by the drone.
+* The Steering Module picks up the movements and translates them into the commands as required by the drone’s API.
 
 We use pre-recorded videos with labels to generate training data. We then build and train the model in Python using Keras. Once trained, we embed this model in a JavaScript application.
+
+### Installation / Start
+You need to install _PoseNet for Installations_, available [here](https://github.com/oveddan/posenet-for-installations). 
+You need to clone it to your local drive (and install _node.js_ and _yarn_ in case you don't have them yet).
+
+Once installed, follow these steps:
+* Go to the folder where you have have installed PoseNet and run ```yarn start```. This will start a node.js server (by default on port 3000) and open your browser pointed to this server.
+* Run the ```websocket.py``` of this repo - this will set up a websocket server, by default on port 8081.
+* Once the websocket server is running, switch back to the PoseNet website and connect to the websocket server (with the _cast_ icon) and then start the webcam and pose detection (with the other two icons).
+* Voilà, you should see the model detecting your postures / gestures in the shell.
 
 ### Project Evolution
 In order to reduce delivery risk we divide our project in four stages and gradually add functionality (and thus complexity):
@@ -42,28 +52,17 @@ We are currently evaluating the best approach for a gesture model. For simplicit
 
 Alternatives appear to be Hidden Markov Models (HMM), Long Short-Term Memory Models (LSTM) or a hybrid of HMM and Convolutional Neural Networks (CNN) or Recurrent Neural Networks (RNN). From a superficial reading all these support time-dependent pattern (and thus gesture) recognition.
 
-References
-https://arxiv.org/pdf/1506.01911.pdf
-https://www.sciencedirect.com/science/article/pii/S1877750317312632
-https://arxiv.org/pdf/1707.03692.pdf
-https://arxiv.org/pdf/1802.09901.pdf
-https://arxiv.org/pdf/1712.10136.pdf
-https://github.com/udacity/CVND---Gesture-Recognition
-https://github.com/hthuwal/sign-language-gesture-recognition
-
-### How to Start
-You need the 'PoseNet for Installations', available [here](https://github.com/oveddan/posenet-for-installations). 
-You need to clone it to your local drive (and install _node.js_ and _yarn_ in case you don't have them yet). 
-Then just follow the instructions in their _Usage_ section.
-
-Then you need to run the ```websocket.py``` - this will set up a websocket server, by default on port 8081.
-Once you have it up and running you can switch back to the PoseNet website and connect to the websocket server and
-start the webcam and pose detection. This should result in the model detecting your postures / gestures and displaying
-them in the shell.
+### References
+* https://arxiv.org/pdf/1506.01911.pdf
+* https://www.sciencedirect.com/science/article/pii/S1877750317312632
+* https://arxiv.org/pdf/1707.03692.pdf
+* https://arxiv.org/pdf/1802.09901.pdf
+* https://arxiv.org/pdf/1712.10136.pdf
+* https://github.com/udacity/CVND---Gesture-Recognition
+* https://github.com/hthuwal/sign-language-gesture-recognition
 
 ### Todos
-* [Pascal or Christian] Implement steering module
-* [Christian and Pascal] Research which modelling approach is most suitable for the gesture model
-* [tbd] Generate training data for gesture model
+* [Christian] Implement steering module
+* [Pascal and Laleh] Research which modelling approach is most suitable for the gesture model
+* [All] Generate training data for gesture model
 * [tbd] Implement and train gesture model
-* [Christian] Integrate gesture model in JavaScript
