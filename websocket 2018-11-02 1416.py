@@ -1,7 +1,6 @@
 import asyncio
 import websockets
 import json
-import time
 import pandas as pd
 import numpy as np
 import h5py
@@ -10,7 +9,6 @@ from keras.models import load_model
 from pipeline import Shuffler, XCentralizer, YCentralizer, YScaler
 from sklearn.pipeline import make_pipeline, make_union
 
-movements = {0:'stop', 1:'left', 2:'right', 3:'up', 4:'down'}
 model = load_model('models/pose_model.h5')
 
 x_cols = ['leftShoulder_x','rightShoulder_x','leftElbow_x','rightElbow_x','leftWrist_x','rightWrist_x','leftHip_x','rightHip_x']
@@ -20,8 +18,8 @@ processing_pipeline = make_pipeline(XCentralizer(x_cols),YCentralizer(y_cols),YS
 async def consumer_handler(websocket, path):
     print('Accepting incoming poses.')
     async for pose in websocket:
-        print_pose(pose)
-        #predict_label(pose)
+        # print_pose(pose)
+        predict_label(pose)
 
 
 def predict_label(pose):
@@ -44,16 +42,7 @@ def predict_label(pose):
                         'rightAnkle_x','rightAnkle_y'])
 
     processing_pipeline.fit_transform(pose_df)
-    #print(movements[np.argmax(model.predict(pose_df)[0])])
-    
-    movement = np.argmax(model.predict(pose_df)[0])
-    print(movements[movement])
-    
-    file = open('pose_' + str(time.time()) + '.json','w')
-    file.write(str(movement) + '\n')
-    file.write(pose)
-    file.close()
-
+    print(np.round(model.predict(pose_df)))
 
 
 def print_pose(pose):

@@ -243,18 +243,18 @@ function getCoordSnapshot(sourceId, sourceType, modelType='none', steeringType='
 				
 			}
 
-			document.getElementById("leftShoulder_x").innerHTML = leftShoulder_x;
-			document.getElementById("leftShoulder_y").innerHTML = leftShoulder_y;
-			document.getElementById("rightShoulder_x").innerHTML = rightShoulder_x;
-			document.getElementById("rightShoulder_y").innerHTML = rightShoulder_y;
-			document.getElementById("leftElbow_x").innerHTML = leftElbow_x;
-			document.getElementById("leftElbow_y").innerHTML = leftElbow_y;
-			document.getElementById("rightElbow_x").innerHTML = rightElbow_x;
-			document.getElementById("rightElbow_y").innerHTML = rightElbow_y;
-			document.getElementById("leftWrist_x").innerHTML = leftWrist_x;
-			document.getElementById("leftWrist_y").innerHTML = leftWrist_y;
-			document.getElementById("rightWrist_x").innerHTML = rightWrist_x;
-			document.getElementById("rightWrist_y").innerHTML = rightWrist_y;
+			document.getElementById("leftShoulder_x").innerHTML = leftShoulder_x / 800;
+			document.getElementById("leftShoulder_y").innerHTML = leftShoulder_y / 800;
+			document.getElementById("rightShoulder_x").innerHTML = rightShoulder_x / 800;
+			document.getElementById("rightShoulder_y").innerHTML = rightShoulder_y / 800;
+			document.getElementById("leftElbow_x").innerHTML = leftElbow_x / 800;
+			document.getElementById("leftElbow_y").innerHTML = leftElbow_y / 800;
+			document.getElementById("rightElbow_x").innerHTML = rightElbow_x / 800;
+			document.getElementById("rightElbow_y").innerHTML = rightElbow_y / 800;
+			document.getElementById("leftWrist_x").innerHTML = leftWrist_x / 800;
+			document.getElementById("leftWrist_y").innerHTML = leftWrist_y / 800;
+			document.getElementById("rightWrist_x").innerHTML = rightWrist_x / 800;
+			document.getElementById("rightWrist_y").innerHTML = rightWrist_y / 800;
 		}
 
 	})

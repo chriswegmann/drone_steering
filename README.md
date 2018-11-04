@@ -65,4 +65,4 @@ Alternatives appear to be Hidden Markov Models (HMM), Long Short-Term Memory Mod
 * [Christian] Implement steering module
 * [Pascal and Laleh] Research which modelling approach is most suitable for the gesture model
 * [All] Generate training data for gesture model
-* [tbd] Implement and train gesture model
+* [tbd] Implement and train the gesture model
