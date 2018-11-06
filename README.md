@@ -8,7 +8,7 @@ These gestures are currently only static postures, meaning once you move your ha
 
 To support this, we will train a machine learning model on top of the PoseNet model. This will involve streaming input data and detecting the patterns to come up with the classification (e.g. loop, land or take picture) and a steering module to transmit signals to a drone.
 
-![Model architecture](https://drone-steering.azurewebsites.net/images/architecture.png)
+![Model architecture](https://drone-steering.azurewebsites.net/images/architecture_local.png)
 
 Let us look at the above modules a bit more in detail:
 * The PoseNet model runs on a local node.js server. The user records video using the browser which connects to the server. The server then broadcasts the wireframe (i.e. the x/y coordinates of various body parts) via web socket.
@@ -51,6 +51,16 @@ We are currently evaluating the best approach for a gesture model. For simplicit
 ![Gesture model](https://drone-steering.azurewebsites.net/images/gesture_model_data.png)
 
 Alternatives appear to be Hidden Markov Models (HMM), Long Short-Term Memory Models (LSTM) or a hybrid of HMM and Convolutional Neural Networks (CNN) or Recurrent Neural Networks (RNN). From a superficial reading all these support time-dependent pattern (and thus gesture) recognition.
+
+### References
+We plan to support the following six gestures:
+![Take off](https://drone-steering.azurewebsites.net/images/gesture_take_off.png)
+![Land](https://drone-steering.azurewebsites.net/images/gesture_land.png)
+![Move](https://drone-steering.azurewebsites.net/images/gesture_move.png)
+![Left](https://drone-steering.azurewebsites.net/images/gesture_left.png)
+![Right](https://drone-steering.azurewebsites.net/images/gesture_right.png)
+![Looping](https://drone-steering.azurewebsites.net/images/gesture_looping.png)
+This is currently work in progress. Once a working version is available, we will make it accessible in the same way as the current posture model.
 
 ### References
 * https://arxiv.org/pdf/1506.01911.pdf
