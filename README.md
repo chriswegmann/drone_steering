@@ -54,13 +54,14 @@ Alternatives appear to be Hidden Markov Models (HMM), Long Short-Term Memory Mod
 
 ### References
 We plan to support the following six gestures:
-![Take off](https://drone-steering.azurewebsites.net/images/gesture_take_off.png)
-![Land](https://drone-steering.azurewebsites.net/images/gesture_land.png)
-![Move](https://drone-steering.azurewebsites.net/images/gesture_move.png)
-![Left](https://drone-steering.azurewebsites.net/images/gesture_left.png)
-![Right](https://drone-steering.azurewebsites.net/images/gesture_right.png)
-![Looping](https://drone-steering.azurewebsites.net/images/gesture_looping.png)
-This is currently work in progress. Once a working version is available, we will make it accessible in the same way as the current posture model.
+
+| Basic                                                                             | Advanced                                                                        |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| ![Take off](https://drone-steering.azurewebsites.net/images/gesture_take_off.png) | ![Left](https://drone-steering.azurewebsites.net/images/gesture_left.png)       |
+| ![Land](https://drone-steering.azurewebsites.net/images/gesture_land.png)         | ![Right](https://drone-steering.azurewebsites.net/images/gesture_right.png)     |
+| ![Move](https://drone-steering.azurewebsites.net/images/gesture_move.png)         | ![Looping](https://drone-steering.azurewebsites.net/images/gesture_looping.png) |
+
+Gestures are currently work in progress. Once a working version is available, we will make it accessible in the same way as the current posture model.
 
 ### References
 * https://arxiv.org/pdf/1506.01911.pdf
