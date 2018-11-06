@@ -52,7 +52,7 @@ We are currently evaluating the best approach for a gesture model. For simplicit
 
 Alternatives appear to be Hidden Markov Models (HMM), Long Short-Term Memory Models (LSTM) or a hybrid of HMM and Convolutional Neural Networks (CNN) or Recurrent Neural Networks (RNN). From a superficial reading all these support time-dependent pattern (and thus gesture) recognition.
 
-### References
+### Supported Gestures
 We plan to support the following six gestures:
 
 <html>
