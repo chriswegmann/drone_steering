@@ -62,8 +62,8 @@ We plan to support the following six gestures:
    <td><img src="https://drone-steering.azurewebsites.net/images/gesture_left.png"></td>
   </tr>
   <tr>
-   <td><img src="https://drone-steering.azurewebsites.net/images/gesture_land.png"></td>
-   <td><img src="https://drone-steering.azurewebsites.net/images/gesture_right.png"></td>
+   <td style="background-color: #FFFFFF;"><img src="https://drone-steering.azurewebsites.net/images/gesture_land.png"></td>
+   <td style="background-color: #FFFFFF;"><img src="https://drone-steering.azurewebsites.net/images/gesture_right.png"></td>
   </tr>
   <tr>
    <td><img src="https://drone-steering.azurewebsites.net/images/gesture_move.png"></td>
