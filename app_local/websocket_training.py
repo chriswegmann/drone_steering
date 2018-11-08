@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore")
 
 
 movements = {0: 'stop', 1: 'left', 2: 'right', 3: 'up', 4: 'down'}
-model = load_model('models/drone_pos_model-nonpipeline.h5')
+model = load_model('../models/drone_pos_model-nonpipeline.h5')
 
 x_cols = ['leftShoulder_x', 'rightShoulder_x', 'leftElbow_x',
           'rightElbow_x', 'leftWrist_x', 'rightWrist_x', 'leftHip_x', 'rightHip_x']
