@@ -2,7 +2,7 @@
 
 We use the PoseNet model as the basis to steer a drone using postures and gestures recorded by a webcam. To support this, we will train a Long Short-Term Memory neural network on top of the PoseNet model. This will involve streaming input data and detecting the patterns to come up with the classification (e.g. take-off, move forward, flip or land) and a steering module to transmit signals to a drone. This is as much an engineering problem as it is a machine learning problem. We build and connect three modules to achieve our goal:
 
-![Model architecture](https://drone-steering.azurewebsites.net/images/architecture_local.png)
+![Model architecture](images/architecture_local.png)
 
 Let us look at the above modules a bit more in detail:
 * The PoseNet model runs on a local node.js server. The user records video using the browser which connects to the server. The server then broadcasts the wireframe (i.e. the x/y coordinates of various body parts) via web socket.
@@ -23,7 +23,7 @@ Once installed, follow these steps:
 ### Project Planning
 In order to reduce delivery risk we divide our project in four stages and gradually add functionality (and thus complexity):
 
-![Project evolution](https://drone-steering.azurewebsites.net/images/project_evolution.png)
+![Project evolution](images/project_evolution.png)
 
 * In a first stage we get the PoseNet model running in a JavaScript application and calculate simple postures directly from the x/y coordinates. We display the inferred movements on the application.
 * The second stage includes a Keras model embedded in the application. This model detects static postures (but no gestures yet - see next section for a discussion of postures vs. gestures). We train this model using webcam data enriched with manually added labels.
@@ -37,11 +37,11 @@ We are currently in the second stage, with the model already being embedded but 
 ![Posture model](https://drone-steering.azurewebsites.net/images/posture_model.png)
 **Gestures:** A gesture is a sequence of interconnected positions, e.g. a circle movement done with the hand. This allows for more complex movements. Compared to the posture model the gesture model now needs a group of positions including their sequence as input.
 
-![Gesture model](https://drone-steering.azurewebsites.net/images/gesture_model.png)
+![Gesture model](images/gesture_model.png)
 
 We are currently evaluating the best approach for a gesture model. For simplicity we assume a maximum duration of two seconds for a gesture, with time steps of 0.05 seconds. Our initial idea is that the model input for a given point in time is an ordered set of 40 positions covering the last two seconds. The subsequent input would again be a set of 40 positions, with the oldest dropped and a new position added as the first. We thus outsource the 'remembering across time' from the model to the part of the application where data is generated. Schematically, this looks as follows (with the gray positions being the ones sent together as an input):
 
-![Gesture model](https://drone-steering.azurewebsites.net/images/gesture_model_data.png)
+![Gesture model](images/gesture_model_data.png)
 
 Alternatives appear to be Hidden Markov Models (HMM), Long Short-Term Memory Models (LSTM) or a hybrid of HMM and Convolutional Neural Networks (CNN) or Recurrent Neural Networks (RNN). From a superficial reading all these support time-dependent pattern (and thus gesture) recognition.
 
@@ -57,16 +57,16 @@ We plan to support the following six gestures:
 <html>
  <table>
   <tr>
-   <td><img src="https://drone-steering.azurewebsites.net/images/gesture_take_off.png"></td>
-   <td><img src="https://drone-steering.azurewebsites.net/images/gesture_left.png"></td>
+   <td><img src="images/gesture_take_off.png"></td>
+   <td><img src="images/gesture_left.png"></td>
   </tr>
   <tr>
-   <td style="background-color: #FFFFFF;"><img src="https://drone-steering.azurewebsites.net/images/gesture_land_grey.png"></td>
-   <td style="background-color: #FFFFFF;"><img src="https://drone-steering.azurewebsites.net/images/gesture_right_grey.png"></td>
+   <td style="background-color: #FFFFFF;"><img src="images/gesture_land_grey.png"></td>
+   <td style="background-color: #FFFFFF;"><img src="images/gesture_right_grey.png"></td>
   </tr>
   <tr>
-   <td><img src="https://drone-steering.azurewebsites.net/images/gesture_move.png"></td>
-   <td><img src="https://drone-steering.azurewebsites.net/images/gesture_looping.png"></td>
+   <td><img src="images/gesture_move.png"></td>
+   <td><img src="images/gesture_looping.png"></td>
   </tr>
  </table>
 </html>  
