@@ -1,12 +1,6 @@
 ## Drone Steering Using Gestures
 
-We use the PoseNet model as the basis to steer a drone using gestures recorded by a webcam. The tool is available [here](https://drone-steering.azurewebsites.net/predict_delta.html) and currently supports the following gestures:
-
-![Supported gestures](https://drone-steering.azurewebsites.net/images/summary.png)
-
-These gestures are currently only static postures, meaning once you move your hands in the right position we detect it and send the signal. We encode the movements as [stop, left, right, up, down] to [0, 1, 2, 3, 4]. In a next step we will add dynamic gestures, e.g. performing a loop with your hands will mean the drone will also make a loop; see separate section below for a more detailed discussion of this topic.
-
-To support this, we will train a machine learning model on top of the PoseNet model. This will involve streaming input data and detecting the patterns to come up with the classification (e.g. loop, land or take picture) and a steering module to transmit signals to a drone.
+We use the PoseNet model as the basis to steer a drone using postures and gestures recorded by a webcam. To support this, we will train a Long Short-Term Memory neural network on top of the PoseNet model. This will involve streaming input data and detecting the patterns to come up with the classification (e.g. take-off, move forward, flip or land) and a steering module to transmit signals to a drone. This is as much an engineering problem as it is a machine learning problem. We build and connect three modules to achieve our goal:
 
 ![Model architecture](https://drone-steering.azurewebsites.net/images/architecture_local.png)
 
@@ -18,8 +12,7 @@ Let us look at the above modules a bit more in detail:
 We use pre-recorded videos with labels to generate training data. We then build and train the model in Python using Keras. Once trained, we embed this model in a JavaScript application.
 
 ### Installation / Start
-You need to install _PoseNet for Installations_, available [here](https://github.com/oveddan/posenet-for-installations). 
-You need to clone it to your local drive (and install _node.js_ and _yarn_ in case you don't have them yet).
+You need to install _PoseNet for Installations_, available [here](https://github.com/oveddan/posenet-for-installations). You need to clone it to your local drive (and install _node.js_ and _yarn_ in case you don't have them yet).
 
 Once installed, follow these steps:
 * Go to the folder where you have have installed PoseNet and run ```yarn start```. This will start a node.js server (by default on port 3000) and open your browser pointed to this server.
@@ -27,7 +20,7 @@ Once installed, follow these steps:
 * Once the websocket server is running, switch back to the PoseNet website and connect to the websocket server (with the _cast_ icon) and then start the webcam and pose detection (with the other two icons).
 * Voilà, you should see the model detecting your postures / gestures in the shell.
 
-### Project Evolution
+### Project Planning
 In order to reduce delivery risk we divide our project in four stages and gradually add functionality (and thus complexity):
 
 ![Project evolution](https://drone-steering.azurewebsites.net/images/project_evolution.png)
@@ -51,6 +44,12 @@ We are currently evaluating the best approach for a gesture model. For simplicit
 ![Gesture model](https://drone-steering.azurewebsites.net/images/gesture_model_data.png)
 
 Alternatives appear to be Hidden Markov Models (HMM), Long Short-Term Memory Models (LSTM) or a hybrid of HMM and Convolutional Neural Networks (CNN) or Recurrent Neural Networks (RNN). From a superficial reading all these support time-dependent pattern (and thus gesture) recognition.
+
+### Supported Postures
+In stage 1 and stage 2 we support the following postures:
+![Supported postures](images/postures.png)
+Postures are currently working when calculated as simple deltas. For the posture model we have achieved an accuracy of >90%.
+
 
 ### Supported Gestures
 We plan to support the following six gestures:
@@ -85,6 +84,7 @@ Gestures are currently work in progress. Once a working version is available, we
 
 ### Todos
 * [Christian] Implement steering module
-* [Pascal and Laleh] Research which modelling approach is most suitable for the gesture model
+* [Christian] Integrate all three modules into one system
+* [All] Generate training data for posture model
 * [All] Generate training data for gesture model
-* [tbd] Implement and train the gesture model
+* [Pascal and Laleh] Implement and train the gesture model

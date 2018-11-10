@@ -8,6 +8,7 @@ import time
 import pandas as pd
 import numpy as np
 import h5py
+import threading
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -16,8 +17,15 @@ drone_last_action = time.time()
 time.sleep(1.2)  # needed for first action to be taken into account
 drone_status = 'grounded'
 
-movements = {0: 'stop', 1: 'left', 2: 'right', 3: 'up', 4: 'down'}
-model = load_model('models/drone_pos_model-nonpipeline.h5')
+movements = {0: 'takeoff',
+             1: 'move_forward',
+             2: 'flip',
+             3: 'rotate_cw',
+             4: 'rotate_ccw',
+             5: 'land',
+             999: 'not detected'}
+
+model = load_model('../models/drone_pos_model-nonpipeline.h5')
 
 x_cols = ['leftShoulder_x', 'rightShoulder_x', 'leftElbow_x',
           'rightElbow_x', 'leftWrist_x', 'rightWrist_x', 'leftHip_x', 'rightHip_x']
@@ -38,54 +46,97 @@ async def consumer_handler(websocket, path):
 def steer_drone(movement):
     global drone_last_action
     global drone_status
-    if (time.time() - drone_last_action) > 1:
+    if (time.time() - drone_last_action) > 1.5:
         drone_last_action = time.time()
-        if ((movement == 4) & (drone_status == 'grounded')):
-            drone_status = 'flying'
-            print('drone.takeoff()')
-            # drone.takeoff()
+        if ((movement == 0) & (drone_status == 'grounded')):
+            threading.Thread(target=drone_takeoff).start()
+            print('time.sleep(5)')
+            time.sleep(5)
         if (drone_status != 'grounded'):
-            if movement == 6:
-                drone_status = 'grounded'
-                print('drone.land()')
-                # drone.land()
-            if movement == 0:
-                print("drone.flip('r')")
-                # drone.flip('r')
             if movement == 1:
-                print('drone.rotate_ccw(45)')
-                # drone.rotate_ccw(45)
+                threading.Thread(target=drone_move_forward).start()
             if movement == 2:
-                print('drone.rotate_cw(45)')
-                # drone.rotate_cw(45)
+                threading.Thread(target=drone_flip).start()
+            if movement == 3:
+                threading.Thread(target=drone_rotate_cw).start()
+            if movement == 4:
+                threading.Thread(target=drone_rotate_ccw).start()
             if movement == 5:
-                print('drone.move_forward(1)')
-                # drone.move_forward(1)
+                threading.Thread(target=drone_land).start()
+
+
+def drone_takeoff():
+    global drone_status
+    drone_status = 'flying'
+    print('drone.takeoff()')
+    print("drone_status = 'flying'")
+    # drone.takeoff()
+
+
+def drone_move_forward():
+    print('drone.move_forward(2)')
+    # time.sleep(1)
+    # drone.move_forward(2)
+
+
+def drone_flip():
+    print("drone.flip('r')")
+    # time.sleep(1)
+    # drone.flip('r')
+
+
+def drone_rotate_cw():
+    print('drone.rotate_cw(45)')
+    # time.sleep(1)
+    # drone.rotate_cw(45)
+
+
+def drone_rotate_ccw():
+    print('drone.rotate_ccw(45)')
+    # time.sleep(1)
+    # drone.rotate_ccw(45)
+
+
+def drone_land():
+    global drone_status
+    drone_status = 'grounded'
+    print('drone.land()')
+    print("drone_status = 'grounded'")
+    # drone.land()
 
 
 def predict_movement_delta(pose_dict):
 
-    movement = 5
+    movement = 999
 
     leftArm_x = pose_dict['leftWrist_x'] - pose_dict['leftShoulder_x']
     rightArm_x = pose_dict['rightShoulder_x'] - pose_dict['rightWrist_x']
     leftArm_y = pose_dict['leftShoulder_y'] - pose_dict['leftWrist_y']
     rightArm_y = pose_dict['rightShoulder_y'] - pose_dict['rightWrist_y']
 
-    if leftArm_x > 60:
-        movement = 1
-
-    if rightArm_x > 60:
-        movement = 2
-
-    if ((leftArm_x > 60) & (rightArm_x > 60)):
+    # takeoff
+    if ((leftArm_y > 100) & (rightArm_y > 100) & (abs(leftArm_x) < 30) & (abs(rightArm_x) < 30)):
         movement = 0
 
-    if ((leftArm_y > 100) & (rightArm_y > 100)):
+    # move_forward
+    if ((abs(leftArm_y) < 30) & (abs(rightArm_y) < 30) & (leftArm_x > 60) & (rightArm_x > 60)):
+        movement = 1
+
+    # flip
+    if ((abs(leftArm_x) < 30) & (abs(rightArm_x) < 30) & (abs(leftArm_y) < 30) & (abs(rightArm_y) < 30)):
+        movement = 2
+
+    # rotate_cw
+    if ((leftArm_y < -100) & (abs(rightArm_y) < 30) & (abs(leftArm_x) < 30) & (rightArm_x > 60)):
         movement = 3
 
-    if ((leftArm_y < -100) & (rightArm_y < -100)):
+    # rotate_ccw
+    if ((abs(leftArm_y) < 30) & (rightArm_y < -100) & (leftArm_x > 60) & (abs(rightArm_x) < 30)):
         movement = 4
+
+    # land
+    if ((leftArm_y < -100) & (rightArm_y < -100) & (abs(leftArm_x) < 30) & (abs(rightArm_x) < 30)):
+        movement = 5
 
     return movement
 

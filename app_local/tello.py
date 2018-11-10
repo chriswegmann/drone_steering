@@ -22,6 +22,7 @@ import threading
 import time
 import traceback
 
+
 class Tello:
     """Wrapper to simply interactions with the Ryze Tello drone."""
 
@@ -52,7 +53,7 @@ class Tello:
         self.socket.bind((local_ip, local_port))
 
         self.receive_thread = threading.Thread(target=self._receive_thread)
-        self.receive_thread.daemon=True
+        self.receive_thread.daemon = True
 
         self.receive_thread.start()
 
@@ -105,7 +106,6 @@ class Tello:
             pass
 
         return battery
-
 
     def get_flight_time(self):
         """Returns the number of seconds elapsed during flight.
@@ -292,8 +292,9 @@ class Tello:
         timer.start()
 
         while self.response is None:
-            if self.abort_flag is True:
-                raise RuntimeError('No response to command')
+            pass
+            # if self.abort_flag is True:
+            #     raise RuntimeError('No response to command')
 
         timer.cancel()
 
