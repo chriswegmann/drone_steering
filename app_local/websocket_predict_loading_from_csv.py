@@ -17,7 +17,7 @@ movements = {0: 'takeoff',
              5: 'land',
              999: 'not detected'}
 
-# drone = tello.Tello('192.168.10.2', 8888)
+drone = tello.Tello('192.168.10.2', 8888)
 
 
 def steer_drone(movement):
@@ -47,31 +47,31 @@ def drone_takeoff():
     drone_status = 'flying'
     print('drone.takeoff()')
     print("drone_status = 'flying'")
-    # drone.takeoff()
+    drone.takeoff()
 
 
 def drone_move_forward():
     print('drone.move_forward(2)')
     # time.sleep(1)
-    # drone.move_forward(2)
+    drone.move_forward(2)
 
 
 def drone_flip():
     print("drone.flip('r')")
     # time.sleep(1)
-    # drone.flip('r')
+    drone.flip('r')
 
 
 def drone_rotate_cw():
     print('drone.rotate_cw(45)')
     # time.sleep(1)
-    # drone.rotate_cw(45)
+    drone.rotate_cw(45)
 
 
 def drone_rotate_ccw():
     print('drone.rotate_ccw(45)')
     # time.sleep(1)
-    # drone.rotate_ccw(45)
+    drone.rotate_ccw(45)
 
 
 def drone_land():
@@ -79,7 +79,7 @@ def drone_land():
     drone_status = 'grounded'
     print('drone.land()')
     print("drone_status = 'grounded'")
-    # drone.land()
+    drone.land()
 
 
 def predict_movement(pose):
