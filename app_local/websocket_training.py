@@ -47,7 +47,7 @@ async def consumer_handler(websocket, path):
     # capture incoming
     print('Accepting incoming snapshots')
     async for pose_json in websocket:
-        start = timeit.default_timer()
+        start = stop
         features = json_to_dict(pose_json)
         features['label'] = predict_movement_delta(json_to_dict(pose_json))
         df = df.append(pd.DataFrame(features, index=[0]))
@@ -73,27 +73,31 @@ def predict_movement_delta(pose_dict):
 
     movement = 999
 
+    dist_vertical = 50
+    dist_horizontal = 40
+    dist_no_mov = 30
+
     leftArm_x = pose_dict['leftWrist_x'] - pose_dict['leftShoulder_x']
     rightArm_x = pose_dict['rightShoulder_x'] - pose_dict['rightWrist_x']
     leftArm_y = pose_dict['leftShoulder_y'] - pose_dict['leftWrist_y']
     rightArm_y = pose_dict['rightShoulder_y'] - pose_dict['rightWrist_y']
 
-    if ((leftArm_y > 100) & (rightArm_y > 100) & (abs(leftArm_x) < 30) & (abs(rightArm_x) < 30)):
+    if ((leftArm_y > dist_vertical) & (rightArm_y > dist_vertical) & (abs(leftArm_x) < dist_no_mov) & (abs(rightArm_x) < dist_no_mov)):
         movement = 0  # takeoff
 
-    if ((abs(leftArm_y) < 30) & (abs(rightArm_y) < 30) & (leftArm_x > 60) & (rightArm_x > 60)):
+    if ((abs(leftArm_y) < dist_no_mov) & (abs(rightArm_y) < dist_no_mov) & (leftArm_x > dist_horizontal) & (rightArm_x > dist_horizontal)):
         movement = 1  # move_forward
 
-    if ((abs(leftArm_x) < 30) & (abs(rightArm_x) < 30) & (abs(leftArm_y) < 30) & (abs(rightArm_y) < 30)):
+    if ((abs(leftArm_x) < dist_no_mov) & (abs(rightArm_x) < dist_no_mov) & (abs(leftArm_y) < dist_no_mov) & (abs(rightArm_y) < dist_no_mov)):
         movement = 2  # flip
 
-    if ((leftArm_y < -100) & (abs(rightArm_y) < 30) & (abs(leftArm_x) < 30) & (rightArm_x > 60)):
+    if ((leftArm_y > dist_horizontal) & (abs(rightArm_y) < dist_no_mov) & (abs(leftArm_x) < dist_no_mov) & (rightArm_x > dist_horizontal)):
         movement = 3  # rotate_cw
 
-    if ((abs(leftArm_y) < 30) & (rightArm_y < -100) & (leftArm_x > 60) & (abs(rightArm_x) < 30)):
+    if ((abs(leftArm_y) < dist_no_mov) & (rightArm_y > dist_horizontal) & (leftArm_x > dist_horizontal) & (abs(rightArm_x) < dist_no_mov)):
         movement = 4  # rotate_ccw
 
-    if ((leftArm_y < -100) & (rightArm_y < -100) & (abs(leftArm_x) < 30) & (abs(rightArm_x) < 30)):
+    if ((leftArm_y < -dist_vertical) & (rightArm_y < -dist_vertical) & (abs(leftArm_x) < dist_no_mov) & (abs(rightArm_x) < dist_no_mov)):
         movement = 5  # land
 
     return movement
