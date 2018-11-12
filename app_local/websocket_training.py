@@ -46,6 +46,7 @@ async def consumer_handler(websocket, path):
 
     # capture incoming
     print('Accepting incoming snapshots')
+    stop = timeit.default_timer()
     async for pose_json in websocket:
         start = stop
         features = json_to_dict(pose_json)
