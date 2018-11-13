@@ -1,3 +1,4 @@
+# import required libraries
 import tello
 import threading
 import h5py
@@ -8,18 +9,20 @@ import json
 import websockets
 import asyncio
 from keras.models import load_model
-from pipeline import Shuffler, XCentralizer, YCentralizer, YScaler
+from pipeline import XCentralizer, YCentralizer, YScaler
 from sklearn.pipeline import make_pipeline, make_union
 import warnings
 warnings.filterwarnings("ignore")
 
+# set debugging parameters
+virtual_flight = True  # flight commands are printed, but not sent to drone
+model_type = 'delta'  # allowed values are 'delta', 'posture', 'gesture'
 
-# connect to drone
-drone = tello.Tello('192.168.10.2', 8888)
+# connect to drone and set status flags
 drone_last_action = time.time()
 drone_status = 'grounded'
-
-# time.sleep(1.2)  # needed for first action to be taken into account
+if not virtual_flight:
+    drone = tello.Tello('192.168.10.2', 8888)
 
 movements = {0: 'takeoff',
              1: 'move_forward',
@@ -29,38 +32,39 @@ movements = {0: 'takeoff',
              5: 'land',
              999: 'not detected'}
 
-model = load_model('../models/drone_pos_model-nonpipeline.h5')
+# load model and initiate pipeline
+if ((model_type == 'posture') | (model_type == 'gesture')):
 
-x_cols = ['leftShoulder_x',
-          'rightShoulder_x',
-          'leftElbow_x',
-          'rightElbow_x',
-          'leftWrist_x',
-          'rightWrist_x',
-          'leftHip_x',
-          'rightHip_x']
+    model = load_model('../models/model_' + model_type + '.h5')
 
-y_cols = ['leftShoulder_y',
-          'rightShoulder_y',
-          'leftElbow_y',
-          'rightElbow_y',
-          'leftWrist_y',
-          'rightWrist_y',
-          'leftHip_y',
-          'rightHip_y']
+    cols_x = ['leftShoulder_x',
+              'rightShoulder_x',
+              'leftWrist_x',
+              'rightWrist_x',
+              'leftHip_x',
+              'rightHip_x']
 
-processing_pipeline = make_pipeline(XCentralizer(
-    x_cols), YCentralizer(y_cols), YScaler(), Shuffler())
+    cols_y = [col.replace('x', 'y') for col in cols_x]
+
+    processing_pipeline = make_pipeline(XCentralizer(cols_x),
+                                        YCentralizer(cols_y),
+                                        YScaler())
 
 
 async def consumer_handler(websocket, path):
 
+    global model_type
+    print(model_type)
+
     print('Accepting incoming snapshots. Waiting for take-off signal.')
     async for pose_json in websocket:
         pose_dict = json_to_dict(pose_json)
-        steer_drone(predict_movement_delta(pose_dict))
-        # steer_drone(predict_movement_model_posture(pose_dict))
-        # steer_drone(predict_movement_model_gesture(pose_dict))
+        if model_type == 'delta':
+            steer_drone(predict_movement_delta(pose_dict))
+        if model_type == 'posture':
+            steer_drone(predict_movement_model_posture(pose_dict))
+        if model_type == 'gesture':
+            steer_drone(predict_movement_model_gesture(pose_dict))
 
 
 def steer_drone(movement):
@@ -91,27 +95,32 @@ def drone_takeoff():
     drone_status = 'flying'
     print('drone.takeoff()')
     print("drone_status = 'flying'")
-    drone.takeoff()
+    if not virtual_flight:
+        drone.takeoff()
 
 
 def drone_move_forward():
     print('drone.move_forward(2)')
-    drone.move_forward(2)
+    if not virtual_flight:
+        drone.move_forward(2)
 
 
 def drone_flip():
     print("drone.flip('r')")
-    drone.flip('r')
+    if not virtual_flight:
+        drone.flip('r')
 
 
 def drone_rotate_cw():
     print('drone.rotate_cw(90)')
-    drone.rotate_cw(90)
+    if not virtual_flight:
+        drone.rotate_cw(90)
 
 
 def drone_rotate_ccw():
     print('drone.rotate_ccw(90)')
-    drone.rotate_ccw(90)
+    if not virtual_flight:
+        drone.rotate_ccw(90)
 
 
 def drone_land():
@@ -119,7 +128,8 @@ def drone_land():
     drone_status = 'grounded'
     print('drone.land()')
     print("drone_status = 'grounded'")
-    drone.land()
+    if not virtual_flight:
+        drone.land()
 
 
 def json_to_dict(pose_json):
@@ -132,34 +142,43 @@ def json_to_dict(pose_json):
         pose_dict[x['poses'][0]['keypoints'][i+5]['part'] +
                   '_y'] = x['poses'][0]['keypoints'][i + 5]['position']['y']
 
+    del pose_dict['leftElbow_x']
+    del pose_dict['leftElbow_y']
+    del pose_dict['rightElbow_x']
+    del pose_dict['rightElbow_y']
+
     return pose_dict
 
 
 def predict_movement_delta(pose_dict):
 
-    movement = 999
+    movement = 999  # no movement detected
 
     leftArm_x = pose_dict['leftWrist_x'] - pose_dict['leftShoulder_x']
     rightArm_x = pose_dict['rightShoulder_x'] - pose_dict['rightWrist_x']
     leftArm_y = pose_dict['leftShoulder_y'] - pose_dict['leftWrist_y']
     rightArm_y = pose_dict['rightShoulder_y'] - pose_dict['rightWrist_y']
 
-    if ((leftArm_y > 100) & (rightArm_y > 100) & (abs(leftArm_x) < 30) & (abs(rightArm_x) < 30)):
+    vertical_threshold = 50
+    horizontal_threshold = 40
+    undetected_threshold = 30
+
+    if ((leftArm_y > vertical_threshold) & (rightArm_y > vertical_threshold) & (abs(leftArm_x) < undetected_threshold) & (abs(rightArm_x) < undetected_threshold)):
         movement = 0  # takeoff
 
-    if ((abs(leftArm_y) < 30) & (abs(rightArm_y) < 30) & (leftArm_x > 60) & (rightArm_x > 60)):
+    if ((abs(leftArm_y) < undetected_threshold) & (abs(rightArm_y) < undetected_threshold) & (leftArm_x > horizontal_threshold) & (rightArm_x > horizontal_threshold)):
         movement = 1  # move_forward
 
-    if ((abs(leftArm_x) < 30) & (abs(rightArm_x) < 30) & (abs(leftArm_y) < 30) & (abs(rightArm_y) < 30)):
+    if ((abs(leftArm_x) < undetected_threshold) & (abs(rightArm_x) < undetected_threshold) & (abs(leftArm_y) < undetected_threshold) & (abs(rightArm_y) < undetected_threshold)):
         movement = 2  # flip
 
-    if ((leftArm_y < -100) & (abs(rightArm_y) < 30) & (abs(leftArm_x) < 30) & (rightArm_x > 60)):
+    if ((leftArm_y < -vertical_threshold) & (abs(rightArm_y) < undetected_threshold) & (abs(leftArm_x) < undetected_threshold) & (rightArm_x > horizontal_threshold)):
         movement = 3  # rotate_cw
 
-    if ((abs(leftArm_y) < 30) & (rightArm_y < -100) & (leftArm_x > 60) & (abs(rightArm_x) < 30)):
+    if ((abs(leftArm_y) < undetected_threshold) & (rightArm_y < -vertical_threshold) & (leftArm_x > horizontal_threshold) & (abs(rightArm_x) < undetected_threshold)):
         movement = 4  # rotate_ccw
 
-    if ((leftArm_y < -100) & (rightArm_y < -100) & (abs(leftArm_x) < 30) & (abs(rightArm_x) < 30)):
+    if ((leftArm_y < -vertical_threshold) & (rightArm_y < -vertical_threshold) & (abs(leftArm_x) < undetected_threshold) & (abs(rightArm_x) < undetected_threshold)):
         movement = 5  # land
 
     return movement
@@ -170,12 +189,14 @@ def predict_movement_model_posture(pose_dict):
     pose_df = pd.DataFrame(pose_dict, index=[0])
     processing_pipeline.fit_transform(pose_df)
     movement = np.argmax(model.predict(pose_df)[0])
+
     return movement
 
 
 def predict_movement_model_gesture(pose_dict):
 
     movement = 0
+
     return movement
 
 

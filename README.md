@@ -16,7 +16,7 @@ You need to install _PoseNet for Installations_, available [here](https://github
 
 Once installed, follow these steps:
 * Go to the folder where you have have installed PoseNet and run ```yarn start```. This will start a node.js server (by default on port 3000) and open your browser pointed to this server.
-* Run the ```websocket.py``` of this repo - this will set up a websocket server, by default on port 8081.
+* Run the ```app_local/websocket_predict.py``` of this repo - this will set up a websocket server, by default on port 8080.
 * Once the websocket server is running, switch back to the PoseNet website and connect to the websocket server (with the _cast_ icon) and then start the webcam and pose detection (with the other two icons).
 * Voilà, you should see the model detecting your postures / gestures in the shell.
 
