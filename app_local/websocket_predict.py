@@ -1,21 +1,22 @@
 # import required libraries
-import tello
-import threading
-import h5py
-import numpy as np
-import pandas as pd
-import time
-import json
-import websockets
-import asyncio
+from module import XCentralizer, YCentralizer, YScaler
 from keras.models import load_model
-from pipeline import XCentralizer, YCentralizer, YScaler
+import asyncio
+import websockets
+import json
+import time
+import pandas as pd
+import numpy as np
+import h5py
+import threading
+import tello
 from sklearn.pipeline import make_pipeline, make_union
 import warnings
+
 warnings.filterwarnings("ignore")
 
 # set debugging parameters
-virtual_flight = False  # flight commands are printed, but not sent to drone
+virtual_flight = True  # flight commands are printed, but not sent to drone
 model_type = 'posture'  # allowed values are 'delta', 'posture', 'gesture'
 
 # connect to drone and set status flags
