@@ -15,8 +15,8 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # set debugging parameters
-virtual_flight = True  # flight commands are printed, but not sent to drone
-model_type = 'delta'  # allowed values are 'delta', 'posture', 'gesture'
+virtual_flight = False  # flight commands are printed, but not sent to drone
+model_type = 'posture'  # allowed values are 'delta', 'posture', 'gesture'
 
 # connect to drone and set status flags
 drone_last_action = time.time()
