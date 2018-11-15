@@ -14,7 +14,7 @@ class XCentralizer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, x):  # x is df
-        shift = x[["rightShoulder_x", "leftShoulder_x"]].sum(axis=1)/4
+        shift = x[["rightShoulder_x", "leftShoulder_x"]].sum(axis=1)/2
         for col in self.x_columns:
             x[col] = x[col] - shift
         return x
