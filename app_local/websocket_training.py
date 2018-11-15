@@ -51,7 +51,7 @@ async def consumer_handler(websocket, path):
         start = stop
         features = json_to_dict(pose_json)
         # features['label'] = predict_movement_delta(json_to_dict(pose_json))
-        # df = df.append(pd.DataFrame(features, index=[0]))
+        df = df.append(pd.DataFrame(features, index=[0]))
         stop = timeit.default_timer()
         print('Snapshot captured in ' + str(1000*(stop - start)) + 'ms')
         # print(pose_json)
