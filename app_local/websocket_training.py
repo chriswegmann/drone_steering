@@ -31,8 +31,7 @@ columns = ['leftShoulder_x',
            'leftHip_x',
            'leftHip_y',
            'rightHip_x',
-           'rightHip_y',
-           'label']
+           'rightHip_y']
 
 df = pd.DataFrame(columns=columns)
 
