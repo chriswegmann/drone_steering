@@ -1,3 +1,4 @@
+from datetime import datetime
 import numpy as np
 import pandas as pd
 import timeit
@@ -16,22 +17,27 @@ movements = {0: 'takeoff',
              5: 'land',
              999: 'not detected'}
 
-columns = ['leftShoulder_x',
-           'leftShoulder_y',
-           'rightShoulder_x',
-           'rightShoulder_y',
-           'leftElbow_x',
-           'leftElbow_y',
-           'rightElbow_x',
-           'rightElbow_y',
-           'leftWrist_x',
-           'leftWrist_y',
-           'rightWrist_x',
-           'rightWrist_y',
-           'leftHip_x',
-           'leftHip_y',
-           'rightHip_x',
-           'rightHip_y']
+columns_coord = ['leftShoulder_x',
+                 'leftShoulder_y',
+                 'rightShoulder_x',
+                 'rightShoulder_y',
+                 'leftElbow_x',
+                 'leftElbow_y',
+                 'rightElbow_x',
+                 'rightElbow_y',
+                 'leftWrist_x',
+                 'leftWrist_y',
+                 'rightWrist_x',
+                 'rightWrist_y',
+                 'leftHip_x',
+                 'leftHip_y',
+                 'rightHip_x',
+                 'rightHip_y']
+
+columns_time = ['ms_since_last_frame',
+                'ms_since_start']
+
+columns = columns_coord + columns_time
 
 df = pd.DataFrame(columns=columns)
 
@@ -43,64 +49,51 @@ async def consumer_handler(websocket, path):
     df.to_csv('dataframe.csv',  index=False)
     df.drop(df.index, inplace=True)
 
-    # capture incoming
     print('Accepting incoming snapshots')
-    stop = timeit.default_timer()
-    async for pose_json in websocket:
-        start = stop
-        features = json_to_dict(pose_json)
-        # features['label'] = predict_movement_delta(json_to_dict(pose_json))
-        df = df.append(pd.DataFrame(features, index=[0]))
-        stop = timeit.default_timer()
-        print('Snapshot captured in ' + str(1000*(stop - start)) + 'ms')
-        # print(pose_json)
-        # print_pose(pose_json)
+    try:
+        async for pose_json in websocket:
+            if 'start' in locals():
+                start = stop
+            else:
+                start = timeit.default_timer()
+            features = json_to_dict(pose_json)
+            stop = timeit.default_timer()
+            if features:
+                ms_since_last_frame = str(round(1000*(stop-start)))
+                features['ms_since_last_frame'] = ms_since_last_frame
+                df = df.append(pd.DataFrame(features, index=[0]))
+                print('Snapshot captured in ' + ms_since_last_frame + 'ms')
+            else:
+                print('No wireframe data detected.')
+
+    except:
+        file_name = 'dataframe_' + datetime.now().strftime('%Y%m%d_%H%M%S') + '.csv'
+        df.drop_duplicates(subset=columns_coord, inplace=True)
+        df.to_csv('../data/' + file_name,  index=False)
+
+        df = pd.read_csv('../data/' + file_name)
+        ms_since_start = 0
+        for index, row in df.iterrows():
+            ms_since_start += row['ms_since_last_frame']
+            df.iloc[index, df.columns.get_loc('ms_since_start')] = ms_since_start
+        df.to_csv('../data/' + file_name,  index=False)
+
+        print('Data saved in file ../data/' + file_name + '.')
+        print('Websocket connection terminated. Please re-connect.')
 
 
 def json_to_dict(pose_json):
     x = json.loads(pose_json)
-    pose_dict = {}
-    for i in range(8):
-        pose_dict[x['poses'][0]['keypoints'][i+5]['part'] +
-                  '_x'] = x['poses'][0]['keypoints'][i + 5]['position']['x']
-        pose_dict[x['poses'][0]['keypoints'][i+5]['part'] +
-                  '_y'] = x['poses'][0]['keypoints'][i + 5]['position']['y']
-
-    return pose_dict
-
-
-def predict_movement_delta(pose_dict):
-
-    movement = 999
-
-    dist_vertical = 50
-    dist_horizontal = 40
-    dist_no_mov = 30
-
-    leftArm_x = pose_dict['leftWrist_x'] - pose_dict['leftShoulder_x']
-    rightArm_x = pose_dict['rightShoulder_x'] - pose_dict['rightWrist_x']
-    leftArm_y = pose_dict['leftShoulder_y'] - pose_dict['leftWrist_y']
-    rightArm_y = pose_dict['rightShoulder_y'] - pose_dict['rightWrist_y']
-
-    if ((leftArm_y > dist_vertical) & (rightArm_y > dist_vertical) & (abs(leftArm_x) < dist_no_mov) & (abs(rightArm_x) < dist_no_mov)):
-        movement = 0  # takeoff
-
-    if ((abs(leftArm_y) < dist_no_mov) & (abs(rightArm_y) < dist_no_mov) & (leftArm_x > dist_horizontal) & (rightArm_x > dist_horizontal)):
-        movement = 1  # move_forward
-
-    if ((abs(leftArm_x) < dist_no_mov) & (abs(rightArm_x) < dist_no_mov) & (abs(leftArm_y) < dist_no_mov) & (abs(rightArm_y) < dist_no_mov)):
-        movement = 2  # flip
-
-    if ((leftArm_y > dist_horizontal) & (abs(rightArm_y) < dist_no_mov) & (abs(leftArm_x) < dist_no_mov) & (rightArm_x > dist_horizontal)):
-        movement = 3  # rotate_cw
-
-    if ((abs(leftArm_y) < dist_no_mov) & (rightArm_y > dist_horizontal) & (leftArm_x > dist_horizontal) & (abs(rightArm_x) < dist_no_mov)):
-        movement = 4  # rotate_ccw
-
-    if ((leftArm_y < -dist_vertical) & (rightArm_y < -dist_vertical) & (abs(leftArm_x) < dist_no_mov) & (abs(rightArm_x) < dist_no_mov)):
-        movement = 5  # land
-
-    return movement
+    if (len(x['poses']) == 0):
+        return False
+    else:
+        pose_dict = {}
+        for i in range(8):
+            pose_dict[x['poses'][0]['keypoints'][i+5]['part'] +
+                      '_x'] = x['poses'][0]['keypoints'][i + 5]['position']['x']
+            pose_dict[x['poses'][0]['keypoints'][i+5]['part'] +
+                      '_y'] = x['poses'][0]['keypoints'][i + 5]['position']['y']
+        return pose_dict
 
 
 def print_pose(pose_json):
