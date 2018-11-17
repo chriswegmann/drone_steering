@@ -31,7 +31,9 @@ columns = ['leftShoulder_x',
            'leftHip_x',
            'leftHip_y',
            'rightHip_x',
-           'rightHip_y']
+           'rightHip_y',
+           'ms_since_last_frame',
+           'ms_since_start']
 
 df = pd.DataFrame(columns=columns)
 
@@ -45,14 +47,24 @@ async def consumer_handler(websocket, path):
 
     # capture incoming
     print('Accepting incoming snapshots')
-    stop = timeit.default_timer()
+    #stop = timeit.default_timer()
     async for pose_json in websocket:
-        start = stop
+        if 'start' in locals():
+            start = stop
+        else:
+            start_fixed = timeit.default_timer()
+            start = timeit.default_timer()
         features = json_to_dict(pose_json)
-        # features['label'] = predict_movement_delta(json_to_dict(pose_json))
-        df = df.append(pd.DataFrame(features, index=[0]))
         stop = timeit.default_timer()
-        print('Snapshot captured in ' + str(1000*(stop - start)) + 'ms')
+        ms_since_last_frame = str(round(1000*(stop - start)))
+        ms_since_start = str(round(1000*(stop - start_fixed)))
+
+        # features['label'] = predict_movement_delta(json_to_dict(pose_json))
+        features['ms_since_last_frame'] = ms_since_last_frame
+        features['ms_since_start'] = ms_since_start
+        df = df.append(pd.DataFrame(features, index=[0]))
+
+        print('Snapshot captured in ' + ms_since_last_frame + 'ms')
         # print(pose_json)
         # print_pose(pose_json)
 
