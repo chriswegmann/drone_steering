@@ -25,13 +25,13 @@ drone_status = 'grounded'
 if not virtual_flight:
     drone = tello.Tello('192.168.10.2', 8888)
 
-movements = {0: 'takeoff',
-             1: 'move_forward',
-             2: 'flip',
-             3: 'rotate_cw',
-             4: 'rotate_ccw',
-             5: 'land',
-             999: 'not detected'}
+movements = {0: 'not detected',
+             1: 'takeoff',
+             2: 'move_forward',
+             3: 'flip',
+             4: 'rotate_cw',
+             5: 'rotate_ccw',
+             6: 'land'}
 
 # load model and initiate pipeline
 if ((model_type == 'posture') | (model_type == 'gesture')):
@@ -72,22 +72,22 @@ def steer_drone(movement):
     global drone_last_action
     global drone_status
 
-    if ((movement == 0) & (drone_status == 'grounded')):
+    if ((movement == 1) & (drone_status == 'grounded')):
         threading.Thread(target=drone_takeoff).start()
         print('Take-off initiated. Ready to take flight commands in five seconds.')
         drone_last_action = time.time()
         time.sleep(4)
     if ((drone_status != 'grounded') & ((time.time() - drone_last_action) > 1.7)):
         drone_last_action = time.time()
-        if movement == 1:
-            threading.Thread(target=drone_move_forward).start()
         if movement == 2:
-            threading.Thread(target=drone_flip).start()
+            threading.Thread(target=drone_move_forward).start()
         if movement == 3:
-            threading.Thread(target=drone_rotate_cw).start()
+            threading.Thread(target=drone_flip).start()
         if movement == 4:
-            threading.Thread(target=drone_rotate_ccw).start()
+            threading.Thread(target=drone_rotate_cw).start()
         if movement == 5:
+            threading.Thread(target=drone_rotate_ccw).start()
+        if movement == 6:
             threading.Thread(target=drone_land).start()
 
 
@@ -153,7 +153,7 @@ def json_to_dict(pose_json):
 
 def predict_movement_delta(pose_dict):
 
-    movement = 999  # no movement detected
+    movement = 0  # no movement detected
 
     leftArm_x = pose_dict['leftWrist_x'] - pose_dict['leftShoulder_x']
     rightArm_x = pose_dict['rightShoulder_x'] - pose_dict['rightWrist_x']
@@ -165,22 +165,22 @@ def predict_movement_delta(pose_dict):
     undetected_threshold = 30
 
     if ((leftArm_y > vertical_threshold) & (rightArm_y > vertical_threshold) & (abs(leftArm_x) < undetected_threshold) & (abs(rightArm_x) < undetected_threshold)):
-        movement = 0  # takeoff
+        movement = 1  # takeoff
 
     if ((abs(leftArm_y) < undetected_threshold) & (abs(rightArm_y) < undetected_threshold) & (leftArm_x > horizontal_threshold) & (rightArm_x > horizontal_threshold)):
-        movement = 1  # move_forward
+        movement = 2  # move_forward
 
     if ((abs(leftArm_x) < undetected_threshold) & (abs(rightArm_x) < undetected_threshold) & (abs(leftArm_y) < undetected_threshold) & (abs(rightArm_y) < undetected_threshold)):
-        movement = 2  # flip
+        movement = 3  # flip
 
     if ((leftArm_y < -vertical_threshold) & (abs(rightArm_y) < undetected_threshold) & (abs(leftArm_x) < undetected_threshold) & (rightArm_x > horizontal_threshold)):
-        movement = 3  # rotate_cw
+        movement = 4  # rotate_cw
 
     if ((abs(leftArm_y) < undetected_threshold) & (rightArm_y < -vertical_threshold) & (leftArm_x > horizontal_threshold) & (abs(rightArm_x) < undetected_threshold)):
-        movement = 4  # rotate_ccw
+        movement = 5  # rotate_ccw
 
     if ((leftArm_y < -vertical_threshold) & (rightArm_y < -vertical_threshold) & (abs(leftArm_x) < undetected_threshold) & (abs(rightArm_x) < undetected_threshold)):
-        movement = 5  # land
+        movement = 6  # land
 
     return movement
 
