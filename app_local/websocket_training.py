@@ -8,15 +8,6 @@ import asyncio
 import warnings
 warnings.filterwarnings("ignore")
 
-
-movements = {0: 'takeoff',
-             1: 'move_forward',
-             2: 'flip',
-             3: 'rotate_cw',
-             4: 'rotate_ccw',
-             5: 'land',
-             999: 'not detected'}
-
 columns_coord = ['leftShoulder_x',
                  'leftShoulder_y',
                  'rightShoulder_x',
@@ -43,8 +34,8 @@ df = pd.DataFrame(columns=columns)
 
 
 async def consumer_handler(websocket, path):
+    # adds coordinates to a dataframe and saves it after the connection is closed
 
-    # store poses collected from previous run as a csv (as long as we don't know how to do this properly)
     global df
     df.to_csv('dataframe.csv',  index=False)
     df.drop(df.index, inplace=True)
@@ -75,7 +66,8 @@ async def consumer_handler(websocket, path):
         ms_since_start = 0
         for index, row in df.iterrows():
             ms_since_start += row['ms_since_last_frame']
-            df.iloc[index, df.columns.get_loc('ms_since_start')] = ms_since_start
+            df.iloc[index, df.columns.get_loc(
+                'ms_since_start')] = ms_since_start
         df.to_csv('../data/' + file_name,  index=False)
 
         print('Data saved in file ../data/' + file_name + '.')
@@ -83,6 +75,8 @@ async def consumer_handler(websocket, path):
 
 
 def json_to_dict(pose_json):
+    # converts the poses from json format to a subset in a dictionary
+
     x = json.loads(pose_json)
     if (len(x['poses']) == 0):
         return False
