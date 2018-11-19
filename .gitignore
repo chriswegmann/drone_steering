@@ -5,7 +5,11 @@
 *.dll
 *.exe
 *.o
-*.so
+*.
+
+# Folders #
+############
+Tutorial_DataSets/
 
 # Packages #
 ############
