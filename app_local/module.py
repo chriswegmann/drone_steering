@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from os import listdir
 import re
+from sklearn.base import BaseEstimator, TransformerMixin
 
 
 class XCentralizer(BaseEstimator, TransformerMixin):
@@ -429,3 +430,46 @@ class DataEnsembler():
         print("-----------------------------------------------------------------------------")
         print("shape final X:",self.X.shape)
         print("number of labeled samples:",len(self.y[self.y > 0]))
+
+
+
+
+class GestureTransformer(BaseEstimator, TransformerMixin):
+    
+    def __init__(self, feature_names, byrow = True):
+        self.byrow = byrow
+        self.feature_names = feature_names
+        self.feat_dict = {feature:feature_names.index(feature) for feature in self.feature_names}
+        self.idx_x = [self.feat_dict[key] for key in self.feat_dict.keys() if key.endswith('_x')]
+        self.idx_y = [self.feat_dict[key] for key in self.feat_dict.keys() if key.endswith('_y')]
+        self.idx_hip_shoulder_x = [self.feat_dict[key] for key in self.feat_dict.keys()\
+                      if key.endswith('_x') and ('Hip' in key or 'Shoulder' in key) ]
+        self.idx_hip_y = [self.feat_dict[key] for key in self.feat_dict.keys()\
+                      if key.endswith('_y') and ('Hip' in key) ]
+        self.idx_shoulder_y = [self.feat_dict[key] for key in self.feat_dict.keys()\
+                      if key.endswith('_y') and ('Shoulder' in key) ]
+        self.idx_hip_shoulder_y = sorted(self.idx_hip_y + self.idx_shoulder_y)
+        
+    
+    def fit(self, X, y = None):
+        return self
+    
+    def transform(self, X):
+        
+        Z = X.copy()
+        
+        if self.byrow:
+            ax = (2)
+        else:
+            ax = (1,2)
+         
+        self.x_shift = Z[:,:,self.idx_hip_shoulder_x].mean(axis = ax)
+        Z[:,:,self.idx_x] = (Z[:,:,self.idx_x].transpose() - self.x_shift.transpose()).transpose()
+        
+        self.y_shift = Z[:,:,self.idx_hip_shoulder_y].mean(axis = ax)
+        Z[:,:,self.idx_y] = (Z[:,:,self.idx_y].transpose() - self.y_shift.transpose()).transpose()
+        
+        self.scale = (Z[:,:,self.idx_shoulder_y].mean(axis = ax) - Z[:,:,self.idx_hip_y].mean(axis = ax))
+        Z = (Z.transpose() / self.scale.transpose()).transpose()    
+        
+        return Z
