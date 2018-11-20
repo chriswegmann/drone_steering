@@ -217,6 +217,13 @@ class LabelGenerator():
         _l = _m[(_m["time"] >= _m["from"]) & (_m["time"] <= _m["to"])].loc[:,["time","label","ignore"]]
         
         self.__labeled_data = self.data.copy()
+
+        time_cols = ['ms_since_last_frame','ms_since_start']
+        for col in time_cols:
+            if col in self.__labeled_data.columns:
+                self.__labeled_data.drop(col, axis = 1, inplace = True)
+                
+
         self.__labeled_data["label"] = _l["label"][~_l["ignore"]]
         self.__labeled_data.fillna(value={'label': 0}, inplace = True)
         self.__labeled_data["label"] = self.__labeled_data["label"].astype("int32")
