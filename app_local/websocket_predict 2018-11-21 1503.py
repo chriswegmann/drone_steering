@@ -29,8 +29,8 @@ movements = {0: 'not detected',
              1: 'takeoff',
              2: 'move',
              3: 'flip',
-             4: 'left',
-             5: 'right',
+             4: 'rotate_cw',
+             5: 'rotate_ccw',
              6: 'land'}
 
 # load model and initiate pipeline
@@ -41,7 +41,7 @@ if ((model_type == 'posture') | (model_type == 'gesture')):
     cols_x = ['leftShoulder_x',
               'rightShoulder_x',
               'leftWrist_x',
-              'rightWrist_x',  # elbow to be added
+              'rightWrist_x',
               'leftHip_x',
               'rightHip_x']
 
