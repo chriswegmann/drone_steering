@@ -55,7 +55,54 @@ class YScaler(BaseEstimator, TransformerMixin):
         return x
 
 
+class LabelGeneratorFramebased():
+    
+    def __init__(self, data_df, labels_df, ms_per_frame):
+        
+        # stores the original data and the used framerate.
+        self.data_df = data_df
+        self.labels_df = labels_df
+        self.ms_per_frame = ms_per_frame
 
+        steps = int(2000//self.ms_per_frame) + 1
+        count_cols = self.data_df.columns.shape[0]
+        count_rows = self.data_df.shape[0] - steps + 1
+        
+        # transforms labels from start/end format to a label per row
+        self.__y = np.zeros(count_rows)
+        for index, row in self.labels_df.iterrows():
+            for i in range(row['real_start'], row['real_end'] + 1):
+                self.__y[i] = row['label']
+
+        # transforms frames into frame sets containing multiple frames
+        self.__X = np.zeros((count_rows,steps,count_cols))
+        data_np = self.data_df.loc[:,:].values
+        for i in range(count_rows):
+            self.__X[i] = data_np[i:i+steps,:]
+
+        self.__feature_names = self.data_df.columns
+
+
+    @property
+    def X(self):
+        return self.__X
+        
+    @property
+    def y(self):
+        return self.__y
+
+    @property
+    def feature_names(self):
+        return self.__feature_names    
+
+    # this propery is not labelled despite its name. It's named like this due to compatibility with LabelGenerator. $
+    # Needs to be re-worked after we decided if take a frame- or time-based labelling approach.
+    @property
+    def labeled_data(self): 
+        return self.data_df    
+
+
+        
 class LabelGenerator():
     
     def __init__(self, data, raw_labels, ms_per_frame):
@@ -69,9 +116,10 @@ class LabelGenerator():
         self.__label_df = pd.DataFrame(
             columns = ["label","real_start","real_end"]
         )
+
         self.__label_df[["label","real_start","real_end"]] =\
             self.raw_labels[["label","real_start","real_end"]]
-        
+
         self.__label_df["real_start"] = self.__label_df["real_start"].apply(lambda x: x*1000)
         self.__label_df["real_end"] = self.__label_df["real_end"].apply(lambda x: x*1000)
         
@@ -126,7 +174,6 @@ class LabelGenerator():
 
         self.__is_fitted = True
 
- 
 
     # PRIVATE METHOD
     # calculates the acceptance interval for each sample
@@ -217,13 +264,6 @@ class LabelGenerator():
         _l = _m[(_m["time"] >= _m["from"]) & (_m["time"] <= _m["to"])].loc[:,["time","label","ignore"]]
         
         self.__labeled_data = self.data.copy()
-
-        time_cols = ['ms_since_last_frame','ms_since_start']
-        for col in time_cols:
-            if col in self.__labeled_data.columns:
-                self.__labeled_data.drop(col, axis = 1, inplace = True)
-                
-
         self.__labeled_data["label"] = _l["label"][~_l["ignore"]]
         self.__labeled_data.fillna(value={'label': 0}, inplace = True)
         self.__labeled_data["label"] = self.__labeled_data["label"].astype("int32")
@@ -343,19 +383,24 @@ class LabelGenerator():
 
 class DataEnsembler():
     
-    pattern = '(?P<filename>(?P<filetype>[a-z]*)_(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)'\
-                    + '(_(?P<frame_length>\d*))?\.csv)'
-    
     def __init__(self, ms_per_frame):
         self.ms_per_frame = ms_per_frame
         
     
-    def investigate_available_datafiles(self, data_dir):
+    def investigate_available_datafiles(self, data_dir, is_frame_based = False):
         self.data_directory = data_dir
         self.filenames = listdir(data_dir)
-        
+        self.is_frame_based = is_frame_based
+
+        pattern = '(?P<filename>(?P<filetype>[a-z]*)_(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)'
+
+        if is_frame_based:
+            pattern = pattern + '(_(per_frame|(?P<frame_length>\d*)))\.csv)'
+        else:
+            pattern = pattern + '(_(?P<frame_length>\d*))?\.csv)'
+
         ds = pd.DataFrame(columns = ['filename','filetype','movement','person','filenum','frame_length'])
-        reg = re.compile(DataEnsembler.pattern)
+        reg = re.compile(pattern)
         
         matches = []
         for file_name in self.filenames:
@@ -384,7 +429,6 @@ class DataEnsembler():
 
         self.data_source_df = ds
         self.combined_data_files_df = comb_ds
-        
  
 
     def load_data(self):
@@ -410,17 +454,23 @@ class DataEnsembler():
         self.y = None
         
         for i in range(n):
-            lg = LabelGenerator(
-                data = self.data[i],
-                raw_labels = self.labels[i],
-                ms_per_frame = self.ms_per_frame
-            )
-            lg.fit_range(
-                tolerance_range = tolerance_range,
-                max_error = max_error
-            )
-            lg.set_labels()
-            lg.extract_training_data()
+            if self.is_frame_based:
+                lg = LabelGeneratorFramebased(
+                    data_df = self.data[i],
+                    labels_df = self.labels[i],
+                    ms_per_frame = self.ms_per_frame)
+            else:
+                lg = LabelGenerator(
+                    data = self.data[i],
+                    raw_labels = self.labels[i],
+                    ms_per_frame = self.ms_per_frame
+                )
+                lg.fit_range(
+                    tolerance_range = tolerance_range,
+                    max_error = max_error
+                )
+                lg.set_labels()
+                lg.extract_training_data()
             self.LabelGenerators.append(lg)
             
             self.X = np.concatenate([lg.X for lg in self.LabelGenerators], axis = 0)

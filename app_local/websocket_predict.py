@@ -27,7 +27,7 @@ if not virtual_flight:
 
 movements = {0: 'not detected',
              1: 'takeoff',
-             2: 'move_forward',
+             2: 'move',
              3: 'flip',
              4: 'rotate_cw',
              5: 'rotate_ccw',
