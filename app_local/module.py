@@ -264,6 +264,13 @@ class LabelGenerator():
         _l = _m[(_m["time"] >= _m["from"]) & (_m["time"] <= _m["to"])].loc[:,["time","label","ignore"]]
         
         self.__labeled_data = self.data.copy()
+
+        time_cols = ['ms_since_last_frame','ms_since_start']
+        for col in time_cols:
+            if col in self.__labeled_data.columns:
+                self.__labeled_data.drop(col, axis = 1, inplace = True)
+
+
         self.__labeled_data["label"] = _l["label"][~_l["ignore"]]
         self.__labeled_data.fillna(value={'label': 0}, inplace = True)
         self.__labeled_data["label"] = self.__labeled_data["label"].astype("int32")
@@ -520,13 +527,28 @@ class GestureTransformer(BaseEstimator, TransformerMixin):
         else:
             ax = (1,2)
          
+        
+        Z = self.perform_x_shift(Z,ax)
+        Z = self.perform_y_shift(Z,ax)
+        Z = self.perform_scaling(Z,ax)     
+                  
+        return Z
+
+
+    def perform_x_shift(self,X, ax):
+        Z = X.copy()
         self.x_shift = Z[:,:,self.idx_hip_shoulder_x].mean(axis = ax)
         Z[:,:,self.idx_x] = (Z[:,:,self.idx_x].transpose() - self.x_shift.transpose()).transpose()
-        
+        return Z
+
+    def perform_y_shift(self,X, ax):
+        Z = X.copy()
         self.y_shift = Z[:,:,self.idx_hip_shoulder_y].mean(axis = ax)
         Z[:,:,self.idx_y] = (Z[:,:,self.idx_y].transpose() - self.y_shift.transpose()).transpose()
-        
+        return Z
+
+    def perform_scaling(self,X, ax):
+        Z = X.copy()
         self.scale = (Z[:,:,self.idx_shoulder_y].mean(axis = ax) - Z[:,:,self.idx_hip_y].mean(axis = ax))
-        Z = (Z.transpose() / self.scale.transpose()).transpose()    
-        
+        Z = (Z.transpose() / self.scale.transpose()).transpose() 
         return Z
