@@ -5,6 +5,7 @@ from os import listdir
 import re
 from sklearn.base import BaseEstimator, TransformerMixin
 from scipy.interpolate import interp1d
+import math
 
 
 class XCentralizer(BaseEstimator, TransformerMixin):
@@ -306,11 +307,11 @@ class LabelGenerator():
         self.avg_framelength = self.__labeled_data["ms_since_start"].values[n-1]/n
         
         if framelength_strategy == 'PoseNet':
-            steps = int(np.ceil(2000/self.ms_per_frame))
+            steps = math.ceil(2000/self.ms_per_frame) + 1
         elif framelength_strategy == 'Avg':
-            steps = int(np.ceil(2000/self.avg_framelength))
+            steps = math.ceil(2000/self.avg_framelength) + 1
         else:
-            steps = int(np.ceil(2000/framelength_strategy))
+            steps = math.ceil(2000/framelength_strategy) + 1
 
 
         self.__feature_names = list(self.__labeled_data.filter(regex = '_(x|y)$', axis = 1).columns)
@@ -540,6 +541,16 @@ class DataEnsembler():
             )
 
         self.actual_lengths_df = act_lens
+
+    
+    def interpolate_data_frames(self, frmlen):
+        self.Interpolators = []
+
+        for i, df in enumerate(self.data):
+            di = DataFrameInterpolator()
+            self.data[i] = di.get_new_df(df, frmlen)
+            self.Interpolators.append(di)
+
 
 
     def assemble_data(self, tolerance_range, max_error, framelength_strategy = 'PoseNet'):
