@@ -396,6 +396,9 @@ class LabelGenerator():
 
 class DataEnsembler():
     
+    pattern = '(?P<filename>(?P<filetype>[a-z]*)_(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)(_(?P<frame_length>\d*))?\.csv)'
+    video_stats_pattern = '(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)'
+    
     def __init__(self, ms_per_frame = 120):
         self.ms_per_frame = ms_per_frame
         
@@ -411,10 +414,26 @@ class DataEnsembler():
         else:
             filenames_labels = listdir(self.data_directory + 'labels_timebased/')
 
-        ds = pd.DataFrame(columns = ['filename','filetype','movement','person','filenum','frame_length'])
+        
+        ds = self.__get_data_source_df(filenames_features, filenames_labels)
+        vs = self.__get_video_stats()
 
-        pattern = '(?P<filename>(?P<filetype>[a-z]*)_(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)(_(?P<frame_length>\d*))?\.csv)'
-        reg = re.compile(pattern)        
+        ds = pd.merge(
+            ds, 
+            vs, 
+            on = ['movement','person','filenum'],
+            how = 'left'
+        )
+
+        self.data_source_df = ds
+        self.combined_data_files_df = self.__get_combined_datafiles_df(ds)
+
+
+
+    def __get_data_source_df(self, filenames_features, filenames_labels):
+        ds = pd.DataFrame(columns = ['filename','filetype','movement','person','filenum','frame_length'])
+ 
+        reg = re.compile(DataEnsembler.pattern)        
 
         matches = []
 
@@ -430,7 +449,34 @@ class DataEnsembler():
           
         for i, match in enumerate(matches):
             ds.loc[i] = match.groupdict()
-            
+
+        return ds
+
+
+    def __get_video_stats(self):
+        self.video_stats = pd.read_csv('docs/video_stats.csv', sep="\t")
+        rev = re.compile(DataEnsembler.video_stats_pattern)
+
+        group_dicts = []
+
+        for file, actual_length in self.video_stats[["file","actual_length"]].itertuples(index = False):
+            match = rev.search(file)
+            if match:
+                gdict = match.groupdict()
+                gdict["actual_length"] = actual_length
+                group_dicts.append(gdict)
+
+        vs = pd.DataFrame(columns = ["movement","person","filenum","actual_length"])
+
+        for i, gdict in enumerate(group_dicts):
+            vs.loc[i] = gdict
+
+        
+        return vs
+
+
+    def __get_combined_datafiles_df(self,ds):
+        
         ds_features = ds[(ds.filetype == 'features') & (ds.frame_length == '000{0}'.format(str(self.ms_per_frame))[-3:])]
         ds_labels = ds[ds.filetype == 'labels']
 
@@ -444,9 +490,9 @@ class DataEnsembler():
         comb_ds = comb_ds.reset_index(drop = True)
         comb_ds = comb_ds[['filename_features','filename_labels']]
 
-        self.data_source_df = ds
-        self.combined_data_files_df = comb_ds
- 
+        return comb_ds
+
+
 
     def load_data(self):
         self.data = []
