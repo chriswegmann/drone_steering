@@ -396,7 +396,7 @@ class LabelGenerator():
 
 class DataEnsembler():
     
-    def __init__(self, ms_per_frame):
+    def __init__(self, ms_per_frame = 120):
         self.ms_per_frame = ms_per_frame
         
     
@@ -632,6 +632,33 @@ class DataFrameInterpolator():
             new_df[feat] = self.cubic_interpolation_functions[feat](self.t_new)
             
         return new_df
+
+    
+
+    def scaleDataFrame(self, df, actual_length_in_ms, time_of_first_frame = None):
+    
+        n = df.shape[0]
+        t = df["ms_since_start"].values
+        
+        if time_of_first_frame == 'avg':
+            time_of_first_frame = int(t[n-1]/n)
+        if not time_of_first_frame:
+            time_of_first_frame = int(t[0])
+        
+        t = t + time_of_first_frame
+        
+        s = actual_length_in_ms/t[n-1]
+        
+        t = np.around(t * s)
+        d = np.diff(t)
+        d = np.insert(arr = d, obj = 0, values = 0)
+        
+        new_df = df.copy()
+        new_df["ms_since_start"] = t
+        new_df["ms_since_last_frame"] = d
+        
+        return new_df
+
     
     def display_information(self):
         if self.__can_display:
