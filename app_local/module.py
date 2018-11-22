@@ -4,6 +4,7 @@ import pandas as pd
 from os import listdir
 import re
 from sklearn.base import BaseEstimator, TransformerMixin
+from scipy.interpolate import interp1d
 
 
 class XCentralizer(BaseEstimator, TransformerMixin):
