@@ -262,7 +262,7 @@ class LabelGenerator():
         self.__is_finalized = False
             
         _T = pd.DataFrame(columns=["time"])
-        _T["time"] = (self.data.index.values+1) * self.ms_per_frame
+        _T["time"] = self.data["ms_since_start"]
         _T["_key_"] = 0
         _l = self.__label_df[["from","to","label","ignore"]]
         _l["_key_"] = 0
@@ -271,16 +271,11 @@ class LabelGenerator():
         
         self.__labeled_data = self.data.copy()
 
-        time_cols = ['ms_since_last_frame','ms_since_start']
-        for col in time_cols:
-            if col in self.__labeled_data.columns:
-                self.__labeled_data.drop(col, axis = 1, inplace = True)
-
 
         self.__labeled_data["label"] = _l["label"][~_l["ignore"]]
         self.__labeled_data.fillna(value={'label': 0}, inplace = True)
         self.__labeled_data["label"] = self.__labeled_data["label"].astype("int32")
-        self.__labeled_data["time"] = np.round(_T["time"],0).astype("int32")
+        self.__labeled_data["ms_since_start"] = np.round(_T["time"],0).astype("int32")
  
         self.__is_labeled = True
     
@@ -300,19 +295,29 @@ class LabelGenerator():
     # y --> vector of labels with length [sample size]
     # feature_names --> list of the names of the assiciated columns in X
     # final_time --> vector with the number of milliseconds associated with the first dimension of X ([sample size])
-    def extract_training_data(self):
+    def extract_training_data(self, framelength_strategy = 'PoseNet'):
         
         if not self.__is_labeled:
             raise ValueError("You have to set the labels with the set_labels-method")
             
         self.__is_finalized = False
+
+        n = self.__labeled_data.shape[0]
+        self.avg_framelength = self.__labeled_data["ms_since_start"].values[n-1]/n
         
-        steps = int(2000//self.ms_per_frame) + 1
-        self.__feature_names = self.__labeled_data.columns.drop(['label','time'])
+        if framelength_strategy == 'PoseNet':
+            steps = int(np.ceil(2000/self.ms_per_frame))
+        elif framelength_strategy == 'Avg':
+            steps = int(np.ceil(2000/self.avg_framelength))
+        else:
+            steps = int(np.ceil(2000/framelength_strategy))
+
+
+        self.__feature_names = list(self.__labeled_data.filter(regex = '_(x|y)$', axis = 1).columns)
         
         _fn = self.__labeled_data.shape[0] - steps + 1
         _ln = self.__labeled_data.shape[0]
-        self.__seq_end_time = self.__labeled_data.loc[(_ln-_fn):_ln,"time"].values
+        self.__seq_end_time = self.__labeled_data.loc[(_ln-_fn):_ln,"ms_since_start"].values
         
         self.__X = np.zeros((
             _fn,
@@ -513,8 +518,29 @@ class DataEnsembler():
             self.labels.append(pd.read_csv(self.data_directory + label_folder + file_name_label))
             
     
+    def rescale_data_frames(self, time_of_first_frame = 'avg'):
+        act_df = self.data_source_df[(self.data_source_df["filetype"]=="features") & (self.data_source_df["actual_length"])]
+        
+        act_lens = pd.merge(
+            self.combined_data_files_df,
+            act_df,
+            how = 'inner',
+            left_on = ['filename_features'],
+            right_on = ['filename'],
+            left_index = True
+        )[['actual_length']]
 
-    def assemble_data(self, tolerance_range, max_error):
+        di = DataFrameInterpolator()
+        
+        for idx in act_lens.index:
+            self.data[idx] = di.scaleDataFrame(
+                df = self.data[idx],
+                actual_length_in_ms = act_lens['actual_length'].loc[idx], 
+                time_of_first_frame = time_of_first_frame
+            )
+
+
+    def assemble_data(self, tolerance_range, max_error, framelength_strategy = 'PoseNet'):
         
         n = len(self.data)
         self.LabelGenerators = []
@@ -538,11 +564,12 @@ class DataEnsembler():
                     max_error = max_error
                 )
                 lg.set_labels()
-                lg.extract_training_data()
+                lg.extract_training_data(framelength_strategy=framelength_strategy)
             self.LabelGenerators.append(lg)
             
             self.X = np.concatenate([lg.X for lg in self.LabelGenerators], axis = 0)
             self.y = np.concatenate([lg.y for lg in self.LabelGenerators], axis = 0)
+            self.feature_names = self.LabelGenerators[0].feature_names
 
             
     def display_information(self):
