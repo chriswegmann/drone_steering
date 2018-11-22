@@ -64,6 +64,11 @@ class LabelGeneratorFramebased():
         self.labels_df = labels_df
         self.ms_per_frame = ms_per_frame
 
+        time_cols = ['ms_since_last_frame','ms_since_start']
+        for col in time_cols:
+            if col in self.data_df.columns:
+                self.data_df.drop(col, axis = 1, inplace = True)
+
         steps = int(2000//self.ms_per_frame) + 1
         count_cols = self.data_df.columns.shape[0]
         count_rows = self.data_df.shape[0] - steps + 1
