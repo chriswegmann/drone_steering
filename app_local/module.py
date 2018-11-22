@@ -528,7 +528,7 @@ class DataEnsembler():
             left_on = ['filename_features'],
             right_on = ['filename'],
             left_index = True
-        )[['actual_length']]
+        )[['filename_features','actual_length']]
 
         di = DataFrameInterpolator()
         
@@ -538,6 +538,8 @@ class DataEnsembler():
                 actual_length_in_ms = act_lens['actual_length'].loc[idx], 
                 time_of_first_frame = time_of_first_frame
             )
+
+        self.actual_lengths_df = act_lens
 
 
     def assemble_data(self, tolerance_range, max_error, framelength_strategy = 'PoseNet'):
