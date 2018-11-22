@@ -11,7 +11,8 @@
 ############
 Tutorial_DataSets/
 __pycache__/
-appl_local/__pycache__/
+app_local/__pycache__/
+
 
 # Packages #
 ############
