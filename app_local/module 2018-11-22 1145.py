@@ -404,28 +404,21 @@ class DataEnsembler():
         self.filenames = listdir(data_dir)
         self.is_frame_based = is_frame_based
 
-        filenames_features = listdir(self.data_directory + 'features/')
-        if self.is_frame_based:
-            filenames_labels = listdir(self.data_directory + 'labels_framebased/')
+        pattern = '(?P<filename>(?P<filetype>[a-z]*)_(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)'
+
+        if is_frame_based:
+            pattern = pattern + '(_(per_frame|(?P<frame_length>\d*)))\.csv)'
         else:
-            filenames_labels = listdir(self.data_directory + 'labels_timebased/')
+            pattern = pattern + '(_(?P<frame_length>\d*))?\.csv)'
 
         ds = pd.DataFrame(columns = ['filename','filetype','movement','person','filenum','frame_length'])
-
-        pattern = '(?P<filename>(?P<filetype>[a-z]*)_(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)(_(?P<frame_length>\d*))?\.csv)'
-        reg = re.compile(pattern)        
-
+        reg = re.compile(pattern)
+        
         matches = []
-
-        for file_name in filenames_features:
+        for file_name in self.filenames:
             match = reg.search(file_name)
             if match:
-                matches.append(match)
-
-        for file_name in filenames_labels:
-            match = reg.search(file_name)
-            if match:
-                matches.append(match)
+                matches.append(match) 
           
         for i, match in enumerate(matches):
             ds.loc[i] = match.groupdict()
@@ -433,11 +426,14 @@ class DataEnsembler():
         ds_features = ds[(ds.filetype == 'features') & (ds.frame_length == '000{0}'.format(str(self.ms_per_frame))[-3:])]
         ds_labels = ds[ds.filetype == 'labels']
 
-        comb_ds = pd.merge(ds_features,
-                           ds_labels,
-                           on = ['movement','person','filenum'],
-                           how = 'left',
-                           suffixes = ['_features','_labels'])[['movement','filename_features','filename_labels']]
+        comb_ds = pd.merge(
+            ds_features,
+            ds_labels,
+            on = ['movement','person','filenum'],
+            how = 'left',
+            suffixes = ['_features','_labels']
+        )[['movement','filename_features','filename_labels']]
+        
         comb_ds = comb_ds.drop(comb_ds[(comb_ds.movement != 'none') & (pd.isnull(comb_ds.filename_labels))].index)
         comb_ds = comb_ds.fillna({'filename_labels': 'labels_none.csv'})
         comb_ds = comb_ds.reset_index(drop = True)
@@ -450,20 +446,15 @@ class DataEnsembler():
     def load_data(self):
         self.data = []
         self.labels = []
-
-        if self.is_frame_based:
-            label_folder = 'labels_framebased/'
-        else:
-            label_folder = 'labels_timebased/'
-
+        
         for file_name_feat, file_name_label in self.combined_data_files_df.itertuples(index = False):
-            new_data = pd.read_csv(self.data_directory + 'features/' + file_name_feat)
+            new_data = pd.read_csv(self.data_directory + file_name_feat)
             
             if 'label' in list(new_data):
                 new_data = new_data.drop('label', axis = 1)
             
             self.data.append(new_data)
-            self.labels.append(pd.read_csv(self.data_directory + label_folder + file_name_label))
+            self.labels.append(pd.read_csv(self.data_directory + file_name_label))
             
     
 
