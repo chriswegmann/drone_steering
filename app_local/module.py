@@ -4,6 +4,7 @@ import pandas as pd
 from os import listdir
 import re
 from sklearn.base import BaseEstimator, TransformerMixin
+from scipy.interpolate import interp1d
 
 
 class XCentralizer(BaseEstimator, TransformerMixin):
@@ -395,7 +396,10 @@ class LabelGenerator():
 
 class DataEnsembler():
     
-    def __init__(self, ms_per_frame):
+    pattern = '(?P<filename>(?P<filetype>[a-z]*)_(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)(_(?P<frame_length>\d*))?\.csv)'
+    video_stats_pattern = '(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)'
+    
+    def __init__(self, ms_per_frame = 120):
         self.ms_per_frame = ms_per_frame
         
     
@@ -410,10 +414,26 @@ class DataEnsembler():
         else:
             filenames_labels = listdir(self.data_directory + 'labels_timebased/')
 
-        ds = pd.DataFrame(columns = ['filename','filetype','movement','person','filenum','frame_length'])
+        
+        ds = self.__get_data_source_df(filenames_features, filenames_labels)
+        vs = self.__get_video_stats()
 
-        pattern = '(?P<filename>(?P<filetype>[a-z]*)_(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)(_(?P<frame_length>\d*))?\.csv)'
-        reg = re.compile(pattern)        
+        ds = pd.merge(
+            ds, 
+            vs, 
+            on = ['movement','person','filenum'],
+            how = 'left'
+        )
+
+        self.data_source_df = ds
+        self.combined_data_files_df = self.__get_combined_datafiles_df(ds)
+
+
+
+    def __get_data_source_df(self, filenames_features, filenames_labels):
+        ds = pd.DataFrame(columns = ['filename','filetype','movement','person','filenum','frame_length'])
+ 
+        reg = re.compile(DataEnsembler.pattern)        
 
         matches = []
 
@@ -429,7 +449,34 @@ class DataEnsembler():
           
         for i, match in enumerate(matches):
             ds.loc[i] = match.groupdict()
-            
+
+        return ds
+
+
+    def __get_video_stats(self):
+        self.video_stats = pd.read_csv('docs/video_stats.csv', sep="\t")
+        rev = re.compile(DataEnsembler.video_stats_pattern)
+
+        group_dicts = []
+
+        for file, actual_length in self.video_stats[["file","actual_length"]].itertuples(index = False):
+            match = rev.search(file)
+            if match:
+                gdict = match.groupdict()
+                gdict["actual_length"] = actual_length
+                group_dicts.append(gdict)
+
+        vs = pd.DataFrame(columns = ["movement","person","filenum","actual_length"])
+
+        for i, gdict in enumerate(group_dicts):
+            vs.loc[i] = gdict
+
+        
+        return vs
+
+
+    def __get_combined_datafiles_df(self,ds):
+        
         ds_features = ds[(ds.filetype == 'features') & (ds.frame_length == '000{0}'.format(str(self.ms_per_frame))[-3:])]
         ds_labels = ds[ds.filetype == 'labels']
 
@@ -443,9 +490,9 @@ class DataEnsembler():
         comb_ds = comb_ds.reset_index(drop = True)
         comb_ds = comb_ds[['filename_features','filename_labels']]
 
-        self.data_source_df = ds
-        self.combined_data_files_df = comb_ds
- 
+        return comb_ds
+
+
 
     def load_data(self):
         self.data = []
@@ -566,3 +613,107 @@ class GestureTransformer(BaseEstimator, TransformerMixin):
         self.scale = (Z[:,:,self.idx_shoulder_y].mean(axis = ax) - Z[:,:,self.idx_hip_y].mean(axis = ax))
         Z = (Z.transpose() / self.scale.transpose()).transpose() 
         return Z
+
+
+
+class DataFrameInterpolator():
+    
+    def __init__(self):
+        self.__can_display = False
+    
+    def get_new_df(self, df, frmlen):
+        
+        self.__can_display = False
+        self.__get_new_t(df, frmlen)
+        self.__get_interpolation_functions(df)
+        self.new_df = self.__create_new_df()    
+        self.__can_display = True
+        
+        return self.new_df
+    
+    
+    def __get_new_t(self, df, frmlen):
+        
+        self.frmlen = frmlen
+        self.__orig_shape = df.shape
+        self.t = df["ms_since_start"].values
+        
+        t_min, t_max  = int(self.t[0]), int(self.t[-1])
+        diff = t_max - t_min
+        
+        if diff % frmlen == 0:
+            num_frames = diff // frmlen 
+        else:
+            num_frames = diff // frmlen + 1
+            
+        self.t_new = np.arange(num_frames+1) * frmlen + t_min
+        
+
+        
+    def __get_interpolation_functions(self, df):
+        
+        self.features = list(df.filter(regex = '_(x|y)$', axis = 1).columns)
+        self.cubic_interpolation_functions = {}
+
+        for feat in self.features:
+            f = df[feat].values
+    
+            cub_f = interp1d(
+                self.t, f, 
+                kind = 'cubic', 
+                fill_value = (f[0],f[-1]), 
+                bounds_error = False,
+                assume_sorted=True
+            )
+        
+            self.cubic_interpolation_functions[feat] = cub_f
+            
+            
+     
+    def __create_new_df(self):
+        new_df = pd.DataFrame(columns=self.features)
+        new_df["ms_since_start"] = self.t_new
+
+        for feat in self.features:
+            new_df[feat] = self.cubic_interpolation_functions[feat](self.t_new)
+            
+        return new_df
+
+    
+
+    def scaleDataFrame(self, df, actual_length_in_ms, time_of_first_frame = None):
+    
+        n = df.shape[0]
+        t = df["ms_since_start"].values
+        
+        if time_of_first_frame == 'avg':
+            time_of_first_frame = int(t[n-1]/n)
+        if not time_of_first_frame:
+            time_of_first_frame = int(t[0])
+        
+        t = t + time_of_first_frame
+        
+        s = actual_length_in_ms/t[n-1]
+        
+        t = np.around(t * s)
+        d = np.diff(t)
+        d = np.insert(arr = d, obj = 0, values = 0)
+        
+        new_df = df.copy()
+        new_df["ms_since_start"] = t
+        new_df["ms_since_last_frame"] = d
+        
+        return new_df
+
+    
+    def display_information(self):
+        if self.__can_display:
+            print("FrameLength in Milliseconds:", self.frmlen,'\n')
+            print("Original Time:")
+            print("\tNumber of Frames:", len(self.t))
+            print("\t",self.t[0:5],"...",self.t[-5:], '\n')
+            print("New Time:")
+            print("\tNumber of Frames:", len(self.t_new))
+            print("\t",self.t_new[0:5],"...",self.t_new[-5:],'\n')
+            print("Original DataFrame Shape:", self.__orig_shape)
+            print("New DataFrame Shape:", self.new_df.shape)
