@@ -566,3 +566,80 @@ class GestureTransformer(BaseEstimator, TransformerMixin):
         self.scale = (Z[:,:,self.idx_shoulder_y].mean(axis = ax) - Z[:,:,self.idx_hip_y].mean(axis = ax))
         Z = (Z.transpose() / self.scale.transpose()).transpose() 
         return Z
+
+
+
+class DataFrameInterpolator():
+    
+    def __init__(self):
+        self.__can_display = False
+    
+    def get_new_df(self, df, frmlen):
+        
+        self.__can_display = False
+        self.__get_new_t(df, frmlen)
+        self.__get_interpolation_functions(df)
+        self.new_df = self.__create_new_df()    
+        self.__can_display = True
+        
+        return self.new_df
+    
+    
+    def __get_new_t(self, df, frmlen):
+        
+        self.frmlen = frmlen
+        self.__orig_shape = df.shape
+        self.t = df["ms_since_start"].values
+        
+        t_min, t_max  = int(self.t[0]), int(self.t[-1])
+        diff = t_max - t_min
+        
+        if diff % frmlen == 0:
+            num_frames = diff // frmlen 
+        else:
+            num_frames = diff // frmlen + 1
+            
+        self.t_new = np.arange(num_frames+1) * frmlen + t_min
+        
+
+        
+    def __get_interpolation_functions(self, df):
+        
+        self.features = list(df.filter(regex = '_(x|y)$', axis = 1).columns)
+        self.cubic_interpolation_functions = {}
+
+        for feat in self.features:
+            f = df[feat].values
+    
+            cub_f = interp1d(
+                self.t, f, 
+                kind = 'cubic', 
+                fill_value = (f[0],f[-1]), 
+                bounds_error = False,
+                assume_sorted=True
+            )
+        
+            self.cubic_interpolation_functions[feat] = cub_f
+            
+            
+     
+    def __create_new_df(self):
+        new_df = pd.DataFrame(columns=self.features)
+        new_df["ms_since_start"] = self.t_new
+
+        for feat in self.features:
+            new_df[feat] = self.cubic_interpolation_functions[feat](self.t_new)
+            
+        return new_df
+    
+    def display_information(self):
+        if self.__can_display:
+            print("FrameLength in Milliseconds:", self.frmlen,'\n')
+            print("Original Time:")
+            print("\tNumber of Frames:", len(self.t))
+            print("\t",self.t[0:5],"...",self.t[-5:], '\n')
+            print("New Time:")
+            print("\tNumber of Frames:", len(self.t_new))
+            print("\t",self.t_new[0:5],"...",self.t_new[-5:],'\n')
+            print("Original DataFrame Shape:", self.__orig_shape)
+            print("New DataFrame Shape:", self.new_df.shape)
