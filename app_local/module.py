@@ -546,7 +546,7 @@ class DataEnsembler():
         self.actual_lengths_df = act_lens
 
 
-    def interplolate_and_convert_framebased_labels(self, new_frmlen, verbose=True):
+    def interpolate_and_convert_framebased_labels(self, new_frmlen, verbose=True):
         if not self.is_frame_based:
             raise ValueError("This instance of DataEnsembler is not framebased. You can not convert the current labels to framebased labels.")
 
@@ -563,7 +563,7 @@ class DataEnsembler():
                 print("\tBefore --> \tData Shape:", self.data[i].shape, "\tLabeled Samples:",
                     (self.labels[i]["real_end"] - self.labels[i]["real_start"] + 1).values.sum())
                 
-            self.data[i], res_labels = interpolate_and_generate_new_framebased_labels(
+            self.data[i], res_labels = self.__interpolate_and_generate_new_framebased_labels(
                 data_orig = self.data[i],
                 labels_orig = self.labels[i],
                 new_frmlen = 50
@@ -608,7 +608,9 @@ class DataEnsembler():
         new_end_idx = []
 
         for i in range(new_data.shape[0]):
-        
+            if j >= temp_labels.shape[0]:
+                break
+
             t = new_data.iloc[i]["ms_since_start"]
             current_end = temp_labels.iloc[j]["end_time"]
 
