@@ -522,7 +522,7 @@ class DataEnsembler():
             self.labels.append(pd.read_csv(self.data_directory + label_folder + file_name_label))
             
     
-    def rescale_data_frames(self, time_of_first_frame = 'avg'):
+    def rescale_data_frames(self, time_of_first_frame = 'avg', verbose = False):
         act_df = self.data_source_df[(self.data_source_df["filetype"]=="features") & (self.data_source_df["actual_length"])]
         
         act_lens = pd.merge(
@@ -537,16 +537,21 @@ class DataEnsembler():
         di = DataFrameInterpolator()
         
         for idx in act_lens.index:
+            if verbose:
+                print("Current Index:", idx)
+
             self.data[idx] = di.scaleDataFrame(
                 df = self.data[idx],
                 actual_length_in_ms = act_lens['actual_length'].loc[idx], 
-                time_of_first_frame = time_of_first_frame
+                time_of_first_frame = time_of_first_frame,
+                verbose = verbose
             )
+
 
         self.actual_lengths_df = act_lens
 
 
-    def interpolate_and_convert_framebased_labels(self, new_frmlen, verbose=True):
+    def interpolate_and_convert_framebased_labels(self, new_frmlen, verbose=False):
         if not self.is_frame_based:
             raise ValueError("This instance of DataEnsembler is not framebased. You can not convert the current labels to framebased labels.")
 
@@ -641,13 +646,17 @@ class DataEnsembler():
 
 
     
-    def interpolate_data_frames(self, frmlen):
+    def interpolate_data_frames(self, frmlen, verbose = False):
         self.Interpolators = []
 
         for i, df in enumerate(self.data):
+
             di = DataFrameInterpolator()
             self.data[i] = di.get_new_df(df, frmlen)
             self.Interpolators.append(di)
+
+            if verbose:
+                print(str(i)+":", df.shape, self.data[i].shape)
 
 
 
@@ -819,16 +828,25 @@ class DataFrameInterpolator():
 
     
 
-    def scaleDataFrame(self, df, actual_length_in_ms, time_of_first_frame = None):
-    
+    def scaleDataFrame(self, df, actual_length_in_ms, time_of_first_frame = None, verbose = False):
+        if verbose:
+            print("Calling DataFrameInterpolator.scaleDataFrame method with current_length {0} and actual length {1}".format(df["ms_since_start"].values[-1],actual_length_in_ms))
+        
         n = df.shape[0]
         t = df["ms_since_start"].values
         
         if time_of_first_frame == 'avg':
             time_of_first_frame = int(t[n-1]/n)
+            if verbose:
+                print("Using \'avg\' to calculate new time of first frame: {0} ==> {1}".format(t[0],time_of_first_frame))
+
         if not time_of_first_frame:
+            if verbose:
+                print("No information provided. Time of first frame is still {0}".format(t[0]))
+            
             time_of_first_frame = int(t[0])
         
+
         t = t + time_of_first_frame
         
         s = actual_length_in_ms/t[n-1]
