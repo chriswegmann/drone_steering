@@ -522,7 +522,7 @@ class DataEnsembler():
             self.labels.append(pd.read_csv(self.data_directory + label_folder + file_name_label))
             
     
-    def rescale_data_frames(self, time_of_first_frame = 'avg', verbose = False):
+    def rescale_data_frames(self, time_of_first_frame = None, verbose = False):
         act_df = self.data_source_df[(self.data_source_df["filetype"]=="features") & (self.data_source_df["actual_length"])]
         
         act_lens = pd.merge(
@@ -660,7 +660,7 @@ class DataEnsembler():
 
 
 
-    def assemble_data(self, tolerance_range, max_error, framelength_strategy = 'PoseNet'):
+    def assemble_data(self, tolerance_range = None, max_error = None, framelength_strategy = 'PoseNet'):
         
         n = len(self.data)
         self.LabelGenerators = []
@@ -674,6 +674,12 @@ class DataEnsembler():
                     labels_df = self.labels[i],
                     ms_per_frame = self.ms_per_frame)
             else:
+                if tolerance_range is None or max_error is None:
+                    raise ValueError("You are currently working with a time based LabelGenerator. Hence, you must provide a tolerance range and a max error."\
+                        + "Alternatively you can use a frame-based LabelGenerator by calling the DataEnsembler.investigate_available_datafiles method with "\
+                        + "Argument \'is_frame_based\' set to \'True\'."
+                    )
+
                 lg = LabelGenerator(
                     data = self.data[i],
                     raw_labels = self.labels[i],
@@ -830,23 +836,31 @@ class DataFrameInterpolator():
 
     def scaleDataFrame(self, df, actual_length_in_ms, time_of_first_frame = None, verbose = False):
         if verbose:
-            print("Calling DataFrameInterpolator.scaleDataFrame method with current_length {0} and actual length {1}".format(df["ms_since_start"].values[-1],actual_length_in_ms))
+            print("Calling DataFrameInterpolator.scaleDataFrame method with current length {0} and actual length {1}".format(df["ms_since_start"].values[-1],actual_length_in_ms))
         
         n = df.shape[0]
         t = df["ms_since_start"].values
         
-        if time_of_first_frame == 'avg':
-            time_of_first_frame = int(t[n-1]/n)
-            if verbose:
-                print("Using \'avg\' to calculate new time of first frame: {0} ==> {1}".format(t[0],time_of_first_frame))
 
-        if not time_of_first_frame:
+        if time_of_first_frame is None:
             if verbose:
                 print("No information provided. Time of first frame is still {0}".format(t[0]))
             
             time_of_first_frame = int(t[0])
-        
 
+        elif time_of_first_frame == 'avg':
+            time_of_first_frame = int(t[n-1]/n)
+            if verbose:
+                print("Using \'avg\' to calculate new time of first frame: {0} ==> {1}".format(t[0],time_of_first_frame))
+        
+        elif not isinstance(time_of_first_frame, int):
+            raise ValueError("The value you provided for time_of_first_frame is invalid. Please provide \'avg\', \'None\' or an integer value.")
+
+        else:
+            if verbose:
+                print("Using provided value as time of first frame: {0}".format(time_of_first_frame))
+
+        
         t = t + time_of_first_frame
         
         s = actual_length_in_ms/t[n-1]
