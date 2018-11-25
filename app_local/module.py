@@ -90,6 +90,9 @@ class LabelGeneratorFramebased():
         self.__feature_names = self.data_df.columns
 
 
+   
+
+
     @property
     def X(self):
         return self.__X
@@ -541,6 +544,99 @@ class DataEnsembler():
             )
 
         self.actual_lengths_df = act_lens
+
+
+    def interplolate_and_convert_framebased_labels(self, new_frmlen, verbose=True):
+        if not self.is_frame_based:
+            raise ValueError("This instance of DataEnsembler is not framebased. You can not convert the current labels to framebased labels.")
+
+        self.rescaled_labels = []
+
+        if verbose:
+            print("")
+            print("Rescaling Feature Timesteps & Framebased Labels:")
+        for i in range(len(self.data)):
+            
+            if verbose:
+                print(str(i)+":",self.combined_data_files_df.iloc[i]["filename_features"],
+                    '\t', self.combined_data_files_df.iloc[i]["filename_labels"])
+                print("\tBefore --> \tData Shape:", self.data[i].shape, "\tLabeled Samples:",
+                    (self.labels[i]["real_end"] - self.labels[i]["real_start"] + 1).values.sum())
+                
+            self.data[i], res_labels = interpolate_and_generate_new_framebased_labels(
+                data_orig = self.data[i],
+                labels_orig = self.labels[i],
+                new_frmlen = 50
+            )
+            self.rescaled_labels.append(res_labels)
+            
+            if verbose:
+                print("\tAfter ---> \tData Shape:", self.data[i].shape, "\tLabeled Samples:", 
+                    (self.rescaled_labels[i]["new_idx_end"] - self.rescaled_labels[i]["new_idx_start"] + 1).values.sum())
+                print("")
+
+            self.labels[i][["real_start","real_end"]] = self.rescaled_labels[i][["new_idx_start","new_idx_end"]]
+                
+
+
+
+    def __interpolate_and_generate_new_framebased_labels(self, data_orig, labels_orig, new_frmlen):
+    
+        temp_labels = labels_orig.copy()
+        
+        start_times = []
+        end_times = []
+
+        for j in range(labels_orig.shape[0]):
+            start_times.append(data_orig.iloc[int(labels_orig.iloc[j]["real_start"])]["ms_since_start"])
+            end_times.append(data_orig.iloc[int(labels_orig.iloc[j]["real_end"])]["ms_since_start"])
+        
+        temp_labels["start_time"] = start_times
+        temp_labels["end_time"] = end_times
+        
+        di = DataFrameInterpolator()
+        
+        new_data = di.get_new_df(
+            df = data_orig,
+            frmlen = new_frmlen
+        )
+        
+        
+        j = 0
+        has_start = False
+        new_start_idx = []
+        new_end_idx = []
+
+        for i in range(new_data.shape[0]):
+        
+            t = new_data.iloc[i]["ms_since_start"]
+            current_end = temp_labels.iloc[j]["end_time"]
+
+            if has_start:
+                if t > current_end - new_frmlen/2:
+                    new_end_idx.append(i)
+                    j = j+1
+                    has_start = False
+                    if j >= temp_labels.shape[0]:
+                        break
+
+            current_start = temp_labels.iloc[j]["start_time"]
+
+
+            if not has_start:
+                if t >= current_start - new_frmlen/2:
+                    new_start_idx.append(i)
+                    has_start = True
+                
+
+        temp_labels["new_idx_start"] = new_start_idx
+        temp_labels["new_idx_end"] = new_end_idx
+        
+        temp_labels["new_start_time"] = list(new_data.loc[new_start_idx,"ms_since_start"])
+        temp_labels["new_end_time"] = list(new_data.loc[new_end_idx,"ms_since_start"])
+        
+        return new_data, temp_labels
+
 
     
     def interpolate_data_frames(self, frmlen):
