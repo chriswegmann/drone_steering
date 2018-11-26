@@ -691,6 +691,7 @@ class DataEnsembler():
                 )
                 lg.set_labels()
                 lg.extract_training_data(framelength_strategy=framelength_strategy)
+            
             self.LabelGenerators.append(lg)
             
             self.X = np.concatenate([lg.X for lg in self.LabelGenerators], axis = 0)
