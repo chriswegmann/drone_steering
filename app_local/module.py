@@ -74,6 +74,9 @@ class LabelGeneratorFramebased():
         steps = int(2000//self.ms_per_frame) + 1
         count_cols = self.data_df.columns.shape[0]
         count_rows = self.data_df.shape[0] - steps + 1
+
+        print('steps: ' + str(steps))
+        print('self.data_df.shape[0]: ' + str(self.data_df.shape[0]))
         
         # transforms labels from start/end format to a label per row
         self.__y = np.zeros(count_rows)
@@ -88,9 +91,6 @@ class LabelGeneratorFramebased():
             self.__X[i] = data_np[i:i+steps,:]
 
         self.__feature_names = self.data_df.columns
-
-
-   
 
 
     @property
@@ -552,6 +552,8 @@ class DataEnsembler():
 
 
     def interpolate_and_convert_framebased_labels(self, new_frmlen, verbose=False):
+
+        self.ms_per_frame = new_frmlen
         if not self.is_frame_based:
             raise ValueError("This instance of DataEnsembler is not framebased. You can not convert the current labels to framebased labels.")
 
@@ -669,6 +671,8 @@ class DataEnsembler():
         
         for i in range(n):
             if self.is_frame_based:
+                print('-------------------------------------')
+                print('File ID: ' + str(i))
                 lg = LabelGeneratorFramebased(
                     data_df = self.data[i],
                     labels_df = self.labels[i],
