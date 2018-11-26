@@ -404,7 +404,7 @@ class LabelGenerator():
 
 
 class DataEnsembler():
-    
+
     pattern = '(?P<filename>(?P<filetype>[a-z]*)_(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)(_(?P<frame_length>\d*))?\.csv)'
     video_stats_pattern = '(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)'
     
