@@ -5,6 +5,7 @@ from os import listdir
 import re
 from sklearn.base import BaseEstimator, TransformerMixin
 from scipy.interpolate import interp1d
+import math
 
 
 class XCentralizer(BaseEstimator, TransformerMixin):
@@ -87,6 +88,9 @@ class LabelGeneratorFramebased():
             self.__X[i] = data_np[i:i+steps,:]
 
         self.__feature_names = self.data_df.columns
+
+
+   
 
 
     @property
@@ -262,7 +266,7 @@ class LabelGenerator():
         self.__is_finalized = False
             
         _T = pd.DataFrame(columns=["time"])
-        _T["time"] = (self.data.index.values+1) * self.ms_per_frame
+        _T["time"] = self.data["ms_since_start"]
         _T["_key_"] = 0
         _l = self.__label_df[["from","to","label","ignore"]]
         _l["_key_"] = 0
@@ -271,16 +275,11 @@ class LabelGenerator():
         
         self.__labeled_data = self.data.copy()
 
-        time_cols = ['ms_since_last_frame','ms_since_start']
-        for col in time_cols:
-            if col in self.__labeled_data.columns:
-                self.__labeled_data.drop(col, axis = 1, inplace = True)
-
 
         self.__labeled_data["label"] = _l["label"][~_l["ignore"]]
         self.__labeled_data.fillna(value={'label': 0}, inplace = True)
         self.__labeled_data["label"] = self.__labeled_data["label"].astype("int32")
-        self.__labeled_data["time"] = np.round(_T["time"],0).astype("int32")
+        self.__labeled_data["ms_since_start"] = np.round(_T["time"],0).astype("int32")
  
         self.__is_labeled = True
     
@@ -300,19 +299,29 @@ class LabelGenerator():
     # y --> vector of labels with length [sample size]
     # feature_names --> list of the names of the assiciated columns in X
     # final_time --> vector with the number of milliseconds associated with the first dimension of X ([sample size])
-    def extract_training_data(self):
+    def extract_training_data(self, framelength_strategy = 'PoseNet'):
         
         if not self.__is_labeled:
             raise ValueError("You have to set the labels with the set_labels-method")
             
         self.__is_finalized = False
+
+        n = self.__labeled_data.shape[0]
+        self.avg_framelength = self.__labeled_data["ms_since_start"].values[n-1]/n
         
-        steps = int(2000//self.ms_per_frame) + 1
-        self.__feature_names = self.__labeled_data.columns.drop(['label','time'])
+        if framelength_strategy == 'PoseNet':
+            steps = math.ceil(2000/self.ms_per_frame) + 1
+        elif framelength_strategy == 'Avg':
+            steps = math.ceil(2000/self.avg_framelength) + 1
+        else:
+            steps = math.ceil(2000/framelength_strategy) + 1
+
+
+        self.__feature_names = list(self.__labeled_data.filter(regex = '_(x|y)$', axis = 1).columns)
         
         _fn = self.__labeled_data.shape[0] - steps + 1
         _ln = self.__labeled_data.shape[0]
-        self.__seq_end_time = self.__labeled_data.loc[(_ln-_fn):_ln,"time"].values
+        self.__seq_end_time = self.__labeled_data.loc[(_ln-_fn):_ln,"ms_since_start"].values
         
         self.__X = np.zeros((
             _fn,
@@ -396,7 +405,10 @@ class LabelGenerator():
 
 class DataEnsembler():
     
-    def __init__(self, ms_per_frame):
+    pattern = '(?P<filename>(?P<filetype>[a-z]*)_(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)(_(?P<frame_length>\d*))?\.csv)'
+    video_stats_pattern = '(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)'
+    
+    def __init__(self, ms_per_frame = 120):
         self.ms_per_frame = ms_per_frame
         
     
@@ -411,10 +423,26 @@ class DataEnsembler():
         else:
             filenames_labels = listdir(self.data_directory + 'labels_timebased/')
 
-        ds = pd.DataFrame(columns = ['filename','filetype','movement','person','filenum','frame_length'])
+        
+        ds = self.__get_data_source_df(filenames_features, filenames_labels)
+        vs = self.__get_video_stats()
 
-        pattern = '(?P<filename>(?P<filetype>[a-z]*)_(?P<movement>[a-z]*)_(?P<person>[a-z]*)_(?P<filenum>\d*)(_(?P<frame_length>\d*))?\.csv)'
-        reg = re.compile(pattern)        
+        ds = pd.merge(
+            ds, 
+            vs, 
+            on = ['movement','person','filenum'],
+            how = 'left'
+        )
+
+        self.data_source_df = ds
+        self.combined_data_files_df = self.__get_combined_datafiles_df(ds)
+
+
+
+    def __get_data_source_df(self, filenames_features, filenames_labels):
+        ds = pd.DataFrame(columns = ['filename','filetype','movement','person','filenum','frame_length'])
+ 
+        reg = re.compile(DataEnsembler.pattern)        
 
         matches = []
 
@@ -430,7 +458,34 @@ class DataEnsembler():
           
         for i, match in enumerate(matches):
             ds.loc[i] = match.groupdict()
-            
+
+        return ds
+
+
+    def __get_video_stats(self):
+        self.video_stats = pd.read_csv('docs/video_stats.csv', sep="\t")
+        rev = re.compile(DataEnsembler.video_stats_pattern)
+
+        group_dicts = []
+
+        for file, actual_length in self.video_stats[["file","actual_length"]].itertuples(index = False):
+            match = rev.search(file)
+            if match:
+                gdict = match.groupdict()
+                gdict["actual_length"] = actual_length
+                group_dicts.append(gdict)
+
+        vs = pd.DataFrame(columns = ["movement","person","filenum","actual_length"])
+
+        for i, gdict in enumerate(group_dicts):
+            vs.loc[i] = gdict
+
+        
+        return vs
+
+
+    def __get_combined_datafiles_df(self,ds):
+        
         ds_features = ds[(ds.filetype == 'features') & (ds.frame_length == '000{0}'.format(str(self.ms_per_frame))[-3:])]
         ds_labels = ds[ds.filetype == 'labels']
 
@@ -444,9 +499,9 @@ class DataEnsembler():
         comb_ds = comb_ds.reset_index(drop = True)
         comb_ds = comb_ds[['filename_features','filename_labels']]
 
-        self.data_source_df = ds
-        self.combined_data_files_df = comb_ds
- 
+        return comb_ds
+
+
 
     def load_data(self):
         self.data = []
@@ -467,8 +522,145 @@ class DataEnsembler():
             self.labels.append(pd.read_csv(self.data_directory + label_folder + file_name_label))
             
     
+    def rescale_data_frames(self, time_of_first_frame = None, verbose = False):
+        act_df = self.data_source_df[(self.data_source_df["filetype"]=="features") & (self.data_source_df["actual_length"])]
+        
+        act_lens = pd.merge(
+            self.combined_data_files_df,
+            act_df,
+            how = 'inner',
+            left_on = ['filename_features'],
+            right_on = ['filename'],
+            left_index = True
+        )[['filename_features','actual_length']]
 
-    def assemble_data(self, tolerance_range, max_error):
+        di = DataFrameInterpolator()
+        
+        for idx in act_lens.index:
+            if verbose:
+                print("Current Index:", idx)
+
+            self.data[idx] = di.scaleDataFrame(
+                df = self.data[idx],
+                actual_length_in_ms = act_lens['actual_length'].loc[idx], 
+                time_of_first_frame = time_of_first_frame,
+                verbose = verbose
+            )
+
+
+        self.actual_lengths_df = act_lens
+
+
+    def interpolate_and_convert_framebased_labels(self, new_frmlen, verbose=False):
+        if not self.is_frame_based:
+            raise ValueError("This instance of DataEnsembler is not framebased. You can not convert the current labels to framebased labels.")
+
+        self.rescaled_labels = []
+
+        if verbose:
+            print("")
+            print("Rescaling Feature Timesteps & Framebased Labels:")
+        for i in range(len(self.data)):
+            
+            if verbose:
+                print(str(i)+":",self.combined_data_files_df.iloc[i]["filename_features"],
+                    '\t', self.combined_data_files_df.iloc[i]["filename_labels"])
+                print("\tBefore --> \tData Shape:", self.data[i].shape, "\tLabeled Samples:",
+                    (self.labels[i]["real_end"] - self.labels[i]["real_start"] + 1).values.sum())
+                
+            self.data[i], res_labels = self.__interpolate_and_generate_new_framebased_labels(
+                data_orig = self.data[i],
+                labels_orig = self.labels[i],
+                new_frmlen = 50
+            )
+            self.rescaled_labels.append(res_labels)
+            
+            if verbose:
+                print("\tAfter ---> \tData Shape:", self.data[i].shape, "\tLabeled Samples:", 
+                    (self.rescaled_labels[i]["new_idx_end"] - self.rescaled_labels[i]["new_idx_start"] + 1).values.sum())
+                print("")
+
+            self.labels[i][["real_start","real_end"]] = self.rescaled_labels[i][["new_idx_start","new_idx_end"]]
+                
+
+
+
+    def __interpolate_and_generate_new_framebased_labels(self, data_orig, labels_orig, new_frmlen):
+    
+        temp_labels = labels_orig.copy()
+        
+        start_times = []
+        end_times = []
+
+        for j in range(labels_orig.shape[0]):
+            start_times.append(data_orig.iloc[int(labels_orig.iloc[j]["real_start"])]["ms_since_start"])
+            end_times.append(data_orig.iloc[int(labels_orig.iloc[j]["real_end"])]["ms_since_start"])
+        
+        temp_labels["start_time"] = start_times
+        temp_labels["end_time"] = end_times
+        
+        di = DataFrameInterpolator()
+        
+        new_data = di.get_new_df(
+            df = data_orig,
+            frmlen = new_frmlen
+        )
+        
+        
+        j = 0
+        has_start = False
+        new_start_idx = []
+        new_end_idx = []
+
+        for i in range(new_data.shape[0]):
+            if j >= temp_labels.shape[0]:
+                break
+
+            t = new_data.iloc[i]["ms_since_start"]
+            current_end = temp_labels.iloc[j]["end_time"]
+
+            if has_start:
+                if t > current_end - new_frmlen/2:
+                    new_end_idx.append(i)
+                    j = j+1
+                    has_start = False
+                    if j >= temp_labels.shape[0]:
+                        break
+
+            current_start = temp_labels.iloc[j]["start_time"]
+
+
+            if not has_start:
+                if t >= current_start - new_frmlen/2:
+                    new_start_idx.append(i)
+                    has_start = True
+                
+
+        temp_labels["new_idx_start"] = new_start_idx
+        temp_labels["new_idx_end"] = new_end_idx
+        
+        temp_labels["new_start_time"] = list(new_data.loc[new_start_idx,"ms_since_start"])
+        temp_labels["new_end_time"] = list(new_data.loc[new_end_idx,"ms_since_start"])
+        
+        return new_data, temp_labels
+
+
+    
+    def interpolate_data_frames(self, frmlen, verbose = False):
+        self.Interpolators = []
+
+        for i, df in enumerate(self.data):
+
+            di = DataFrameInterpolator()
+            self.data[i] = di.get_new_df(df, frmlen)
+            self.Interpolators.append(di)
+
+            if verbose:
+                print(str(i)+":", df.shape, self.data[i].shape)
+
+
+
+    def assemble_data(self, tolerance_range = None, max_error = None, framelength_strategy = 'PoseNet'):
         
         n = len(self.data)
         self.LabelGenerators = []
@@ -482,6 +674,12 @@ class DataEnsembler():
                     labels_df = self.labels[i],
                     ms_per_frame = self.ms_per_frame)
             else:
+                if tolerance_range is None or max_error is None:
+                    raise ValueError("You are currently working with a time based LabelGenerator. Hence, you must provide a tolerance range and a max error."\
+                        + "Alternatively you can use a frame-based LabelGenerator by calling the DataEnsembler.investigate_available_datafiles method with "\
+                        + "Argument \'is_frame_based\' set to \'True\'."
+                    )
+
                 lg = LabelGenerator(
                     data = self.data[i],
                     raw_labels = self.labels[i],
@@ -492,11 +690,12 @@ class DataEnsembler():
                     max_error = max_error
                 )
                 lg.set_labels()
-                lg.extract_training_data()
+                lg.extract_training_data(framelength_strategy=framelength_strategy)
             self.LabelGenerators.append(lg)
             
             self.X = np.concatenate([lg.X for lg in self.LabelGenerators], axis = 0)
             self.y = np.concatenate([lg.y for lg in self.LabelGenerators], axis = 0)
+            self.feature_names = self.LabelGenerators[0].feature_names
 
             
     def display_information(self):
@@ -632,6 +831,50 @@ class DataFrameInterpolator():
             new_df[feat] = self.cubic_interpolation_functions[feat](self.t_new)
             
         return new_df
+
+    
+
+    def scaleDataFrame(self, df, actual_length_in_ms, time_of_first_frame = None, verbose = False):
+        if verbose:
+            print("Calling DataFrameInterpolator.scaleDataFrame method with current length {0} and actual length {1}".format(df["ms_since_start"].values[-1],actual_length_in_ms))
+        
+        n = df.shape[0]
+        t = df["ms_since_start"].values
+        
+
+        if time_of_first_frame is None:
+            if verbose:
+                print("No information provided. Time of first frame is still {0}".format(t[0]))
+            
+            time_of_first_frame = int(t[0])
+
+        elif time_of_first_frame == 'avg':
+            time_of_first_frame = int(t[n-1]/n)
+            if verbose:
+                print("Using \'avg\' to calculate new time of first frame: {0} ==> {1}".format(t[0],time_of_first_frame))
+        
+        elif not isinstance(time_of_first_frame, int):
+            raise ValueError("The value you provided for time_of_first_frame is invalid. Please provide \'avg\', \'None\' or an integer value.")
+
+        else:
+            if verbose:
+                print("Using provided value as time of first frame: {0}".format(time_of_first_frame))
+
+        
+        t = t + time_of_first_frame
+        
+        s = actual_length_in_ms/t[n-1]
+        
+        t = np.around(t * s)
+        d = np.diff(t)
+        d = np.insert(arr = d, obj = 0, values = 0)
+        
+        new_df = df.copy()
+        new_df["ms_since_start"] = t
+        new_df["ms_since_last_frame"] = d
+        
+        return new_df
+
     
     def display_information(self):
         if self.__can_display:

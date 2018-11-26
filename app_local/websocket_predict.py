@@ -1,6 +1,7 @@
 # import required libraries
 from module import XCentralizer, YCentralizer, YScaler, GestureTransformer
 from keras.models import load_model
+from datetime import datetime
 import asyncio
 import websockets
 import json
@@ -61,7 +62,7 @@ if (model_type == 'gesture'):
               'rightWrist_x',
               'leftHip_x',
               'rightHip_x',
-              'leftElbox_x',
+              'leftElbow_x',
               'rightElbow_x']
 
     cols_y = [col.replace('x', 'y') for col in cols_x]
@@ -156,7 +157,7 @@ def drone_land():
         drone.land()
 
 
-def json_to_dict(pose_json): # to be added: handling for case when no coordinates come through
+def json_to_dict(pose_json):  # to be added: handling for case when no coordinates come through
 
     x = json.loads(pose_json)
     pose_dict = {}
@@ -166,10 +167,10 @@ def json_to_dict(pose_json): # to be added: handling for case when no coordinate
         pose_dict[x['poses'][0]['keypoints'][i+5]['part'] +
                   '_y'] = x['poses'][0]['keypoints'][i + 5]['position']['y']
 
-    del pose_dict['leftElbow_x']
-    del pose_dict['leftElbow_y']
-    del pose_dict['rightElbow_x']
-    del pose_dict['rightElbow_y']
+    # del pose_dict['leftElbow_x']
+    # del pose_dict['leftElbow_y']
+    # del pose_dict['rightElbow_x']
+    # del pose_dict['rightElbow_y']
 
     return pose_dict
 
@@ -228,6 +229,9 @@ def predict_movement_model_gesture(pose_dict):
         pose_df = pose_df.iloc[1:]
 
     if len(pose_df) == 17:
+        file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
+        pose_df.to_csv('model_inputs/' + file_name,  index=False)
+
         pose_np = pose_df.values.reshape(1, 17, 16)
         processing_pipeline.fit_transform(pose_np)
         movement = np.argmax(model.predict(pose_np)[0])

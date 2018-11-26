@@ -10,6 +10,13 @@
 # Folders #
 ############
 Tutorial_DataSets/
+__pycache__/
+app_local/__pycache__/
+
+# pycache files #
+#################
+*.pyc
+
 
 # Packages #
 ############
