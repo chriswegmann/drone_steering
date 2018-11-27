@@ -25,7 +25,7 @@ ms_per_frame_original = 120
 gesture_length = 2000
 
 # set interpolation parameters
-use_interpolation = False
+use_interpolation = True
 ms_per_frame_interpolated = 50
 add_interpol_frames = 3
 
@@ -233,8 +233,8 @@ def predict_movement_model_gesture(pose_dict):
     global pose_df
     movement = 0
 
-    steps = math.ceil(gesture_length/ms_per_frame_original) + 1
-    steps_ip = math.ceil(gesture_length/ms_per_frame_interpolated) + 1
+    steps = math.floor(gesture_length/ms_per_frame_original) + 1
+    steps_ip = math.floor(gesture_length/ms_per_frame_interpolated) + 1
 
     pose_df = pose_df.append(pd.DataFrame(pose_dict, index=[0]))
 
