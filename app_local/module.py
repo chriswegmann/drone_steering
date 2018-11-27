@@ -736,6 +736,7 @@ class DataEnsembler():
 
 
 
+
 class GestureTransformer(BaseEstimator, TransformerMixin):
     
     def __init__(self, feature_names, byrow = True):
@@ -756,7 +757,10 @@ class GestureTransformer(BaseEstimator, TransformerMixin):
     def fit(self, X, y = None):
         return self
     
-    def transform(self, X):
+    def transform(self, X, verbose = False):
+        if verbose:
+            print("---------------------------------------------------------")
+            print("Performing {0}-based transformations:".format("row" if self.byrow else "matrix"))
         
         Z = X.copy()
         
@@ -766,30 +770,95 @@ class GestureTransformer(BaseEstimator, TransformerMixin):
             ax = (1,2)
          
         
-        Z = self.perform_x_shift(Z,ax)
-        Z = self.perform_y_shift(Z,ax)
-        Z = self.perform_scaling(Z,ax)     
+        Z = self.perform_x_shift(Z,ax,verbose)
+        Z = self.perform_y_shift(Z,ax,verbose)
+        Z = self.perform_scaling(Z,ax,verbose)     
                   
+        if verbose:
+            self.display_information()
+        
         return Z
 
 
-    def perform_x_shift(self,X, ax):
+    def perform_x_shift(self,X, ax, verbose):
         Z = X.copy()
         self.x_shift = Z[:,:,self.idx_hip_shoulder_x].mean(axis = ax)
+        
+        if verbose:
+            print("X-Mean of Hip and Shoulders:")
+            if self.byrow:
+                print("\tRow-based Mean is taken over each sample and each timestep")
+            else:
+                print("\tMatrix-based Mean is taken over each sample")
+            
+            print("\tShape:", self.x_shift.shape)
+                                                
         Z[:,:,self.idx_x] = (Z[:,:,self.idx_x].transpose() - self.x_shift.transpose()).transpose()
         return Z
 
-    def perform_y_shift(self,X, ax):
+    def perform_y_shift(self,X, ax, verbose):
         Z = X.copy()
         self.y_shift = Z[:,:,self.idx_hip_shoulder_y].mean(axis = ax)
+        
+        if verbose:
+            print("Y-Mean of Hip and Shoulders:")
+            if self.byrow:
+                print("\tRow-based Mean is taken over each sample and each timestep")
+            else:
+                print("\tMatrix-based Mean is taken over each sample")
+            
+            print("\tShape:", self.y_shift.shape)
+        
         Z[:,:,self.idx_y] = (Z[:,:,self.idx_y].transpose() - self.y_shift.transpose()).transpose()
         return Z
 
-    def perform_scaling(self,X, ax):
+    def perform_scaling(self,X, ax, verbose):
         Z = X.copy()
         self.scale = (Z[:,:,self.idx_shoulder_y].mean(axis = ax) - Z[:,:,self.idx_hip_y].mean(axis = ax))
+        
+        if verbose:
+            print("Scaling based on Hip-Shoulder distance:")
+            if self.byrow:
+                print("\tRow-based distance is calculated for each sample and each timestep")
+            else:
+                print("\tMatrix-based distance is calculated for each sample")
+            
+            print("\tShape:", self.scale.shape)
+        
+        
         Z = (Z.transpose() / self.scale.transpose()).transpose() 
         return Z
+    
+    
+    def display_information(self):
+        
+        disp_arr = []
+        disp_arr.append(self.x_shift)
+        disp_arr.append(self.y_shift)
+        disp_arr.append(self.scale)
+        
+        for i, _trans in enumerate(disp_arr):
+            print("-----------------------------------------------------")
+            _title = "X-Shift:" if i==0 else "Y-Shift:" if i==1 else "Scaling-Diff:"
+            print(_title)
+            trans_info_df = pd.DataFrame(columns= ["min","mean","median","max","std"])
+            _min = pd.Series(np.round(_trans.min(axis = 0),1))
+            _mean = pd.Series(np.round(_trans.mean(axis = 0),1))
+            _median = pd.Series(np.round(np.median(_trans, axis = 0),1))
+            _max = pd.Series(np.round(_trans.max(axis = 0),1))
+            _std = pd.Series(np.round(_trans.std(axis = 0),1))
+
+            trans_info_df["min"] = _min
+            trans_info_df["mean"] = _mean
+            trans_info_df["median"] = _median
+            trans_info_df["max"] = _max
+            trans_info_df["std"] = _std
+
+            if self.byrow:
+                trans_info_df.index.name = "timestep"
+
+            print(trans_info_df)
+
 
 
 
