@@ -14,6 +14,7 @@ import tello
 from sklearn.pipeline import make_pipeline, make_union
 import math
 import warnings
+from scipy.interpolate import interp1d
 
 warnings.filterwarnings("ignore")
 
@@ -266,7 +267,35 @@ def predict_movement_model_gesture(pose_dict):
 
 def interpolate(pose_df, ms_per_frame_interpolated):
 
-    return pose_df
+    features = list(pose_df.filter(regex = '_(x|y)$', axis = 1).columns)
+    t = pose_df["ms_since_start"].values
+
+    interpolators = {}
+    for feat in features:
+        f = pose_df[feat].values
+        
+        cub_f = interp1d(
+                    t, f, 
+                    kind = 'cubic', 
+                    fill_value = (f[0],f[-1]), 
+                    bounds_error = False,
+                    assume_sorted=True
+                )
+        
+        interpolators[feat] = cub_f
+        
+    n = int(np.ceil(gesture_length/ms_per_frame_interpolated) + 1)
+    t_delta = sorted([ms_per_frame_interpolated * i for i in range(0,-n,-1)])
+    t_new = t_delta + t[-1]
+
+    interp_df = pd.DataFrame(columns = features)
+    interp_df["ms_since_start"] = t_new
+
+    for feat in features:
+        interp_df[feat] = interpolators[feat](t_new)
+    
+    
+    return interp_df
 
 
 # start websocket server
