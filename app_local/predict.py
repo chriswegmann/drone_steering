@@ -12,13 +12,21 @@ import h5py
 import threading
 import tello
 from sklearn.pipeline import make_pipeline, make_union
+import math
 import warnings
 
 warnings.filterwarnings("ignore")
 
-# set debugging parameters
-virtual_flight = True  # flight commands are printed, but not sent to drone
-model_type = 'gesture'  # allowed values are 'delta', 'posture', 'gesture'
+# set general parameters
+virtual_flight = True        # flight commands are printed, but not sent to drone
+model_type = 'gesture'       # allowed values are 'delta', 'posture', 'gesture'
+ms_per_frame_original = 120
+gesture_length = 2000
+
+# set interpolation parameters
+use_interpolation = False
+ms_per_frame_interpolated = 50
+add_interpol_frames = 3
 
 # connect to drone and set status flags
 drone_last_action = time.time()
@@ -104,13 +112,13 @@ def steer_drone(movement):
     if ((drone_status != 'grounded') & ((time.time() - drone_last_action) > 1.7)):
         drone_last_action = time.time()
         if movement == 2:
-            threading.Thread(target=drone_move_forward).start()
+            threading.Thread(target=drone_move).start()
         if movement == 3:
             threading.Thread(target=drone_flip).start()
-        if movement == 4:  # to be renamed to 'left' and 'right'
-            threading.Thread(target=drone_rotate_cw).start()
+        if movement == 4:
+            threading.Thread(target=drone_left).start()
         if movement == 5:
-            threading.Thread(target=drone_rotate_ccw).start()
+            threading.Thread(target=drone_right).start()
         if movement == 6:
             threading.Thread(target=drone_land).start()
 
@@ -124,7 +132,7 @@ def drone_takeoff():
         drone.takeoff()
 
 
-def drone_move_forward():
+def drone_move():
     print('drone.move_forward(2)')
     if not virtual_flight:
         drone.move_forward(2)
@@ -136,13 +144,13 @@ def drone_flip():
         drone.flip('r')
 
 
-def drone_rotate_cw():
+def drone_left():
     print('drone.rotate_cw(90)')
     if not virtual_flight:
         drone.rotate_cw(90)
 
 
-def drone_rotate_ccw():
+def drone_right():
     print('drone.rotate_ccw(90)')
     if not virtual_flight:
         drone.rotate_ccw(90)
@@ -157,7 +165,7 @@ def drone_land():
         drone.land()
 
 
-def json_to_dict(pose_json):  # to be added: handling for case when no coordinates come through
+def json_to_dict(pose_json):
 
     x = json.loads(pose_json)
     pose_dict = {}
@@ -167,10 +175,11 @@ def json_to_dict(pose_json):  # to be added: handling for case when no coordinat
         pose_dict[x['poses'][0]['keypoints'][i+5]['part'] +
                   '_y'] = x['poses'][0]['keypoints'][i + 5]['position']['y']
 
-    # del pose_dict['leftElbow_x']
-    # del pose_dict['leftElbow_y']
-    # del pose_dict['rightElbow_x']
-    # del pose_dict['rightElbow_y']
+    if model_type != 'gesture':
+        del pose_dict['leftElbow_x']
+        del pose_dict['leftElbow_y']
+        del pose_dict['rightElbow_x']
+        del pose_dict['rightElbow_y']
 
     return pose_dict
 
@@ -223,20 +232,41 @@ def predict_movement_model_gesture(pose_dict):
     global pose_df
     movement = 0
 
+    steps = math.ceil(gesture_length/ms_per_frame_original) + 1
+    steps_ip = math.ceil(gesture_length/ms_per_frame_interpolated) + 1
+
     pose_df = pose_df.append(pd.DataFrame(pose_dict, index=[0]))
 
-    if len(pose_df) > 17:
-        pose_df = pose_df.iloc[1:]
+    if use_interpolation:
+        if len(pose_df) > (steps + add_interpol_frames):
+            pose_df = pose_df.iloc[1:]
 
-    if len(pose_df) == 17:
-        file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
-        pose_df.to_csv('model_inputs/' + file_name,  index=False)
+        if len(pose_df) == (steps + add_interpol_frames):
+            pose_ip_df = interpolate(pose_df, ms_per_frame_interpolated)
+            file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
+            pose_ip_df.to_csv('model_inputs/' + file_name,  index=False)
 
-        pose_np = pose_df.values.reshape(1, 17, 16)
-        processing_pipeline.fit_transform(pose_np)
-        movement = np.argmax(model.predict(pose_np)[0])
+            pose_np = pose_ip_df.values.reshape(1, steps_ip, len(cols))
+            processing_pipeline.fit_transform(pose_np)
+            movement = np.argmax(model.predict(pose_np)[0])
+    else:
+        if len(pose_df) > steps:
+            pose_df = pose_df.iloc[1:]
+
+        if len(pose_df) == steps:
+            file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
+            pose_df.to_csv('model_inputs/' + file_name,  index=False)
+
+            pose_np = pose_df.values.reshape(1, steps, len(cols))
+            processing_pipeline.fit_transform(pose_np)
+            movement = np.argmax(model.predict(pose_np)[0])
 
     return movement
+
+
+def interpolate(pose_df, ms_per_frame_interpolated):
+
+    return pose_df
 
 
 # start websocket server
