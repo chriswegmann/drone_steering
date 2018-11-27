@@ -710,9 +710,28 @@ class DataEnsembler():
                     len(lg.y[ lg.y > 0 ])
             )
 
+        n = len(self.y)
+        ln = len(self.y[self.y>0])
+
         print("-----------------------------------------------------------------------------")
         print("shape final X:",self.X.shape)
-        print("number of labeled samples:",len(self.y[self.y > 0]))
+        print("number of labeled samples:",ln)
+
+        
+        for i in sorted(set(self.y.astype("int32"))):
+            lni = len(self.y[np.isclose(self.y,i)])
+            
+            if i == 0:
+                _ = 'total'
+                pct = 100*lni/n
+            else:
+                _ = 'labeled'
+                pct = 100*lni/ln
+                
+            _str = '\t{0}% of ' + _
+            
+            print("Label {0}:".format(i), lni, _str.format(np.round(pct,2)))
+
 
 
 
