@@ -1041,7 +1041,7 @@ class DataResampler():
         return self.X, self.y 
     
     
-    def upsample(self, n = None):
+    def upsample(self, n = None, exceptions = None):
         if n is None:
             n = len(self.indices[0])
         elif n < 0:
@@ -1050,11 +1050,18 @@ class DataResampler():
         a = {} 
         b = {}
         idx = {}
+
+        if exceptions is None:
+            exceptions = []
             
         for i in self.indices.keys():
-            a[i] = min(n, len(self.indices[i]))
-            diff = n - len(self.indices[i])
-            b[i] = max(0, diff)
+            if i in exceptions:
+                a[i] = len(self.indices[i])
+                b[i] = 0
+            else:
+                a[i] = min(n, len(self.indices[i]))
+                diff = n - len(self.indices[i])
+                b[i] = max(0, diff)
             
             idx_a = np.random.choice(self.indices[i], a[i], replace = False)
             idx_b = np.random.choice(self.indices[i], b[i], replace = True)
