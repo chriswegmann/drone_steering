@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore")
 
 # set general parameters
 virtual_flight = True        # flight commands are printed, but not sent to drone
-model_type = 'gesture'       # allowed values are 'delta', 'posture', 'gesture'
+model_type = 'posture'       # allowed values are 'delta', 'posture', 'gesture'
 ms_per_frame_original = 120
 gesture_length = 2000
 
@@ -91,12 +91,15 @@ async def consumer_handler(websocket, path):
 #    try:
     async for pose_json in websocket:
         pose_dict = json_to_dict(pose_json)
-        if model_type == 'delta':
-            steer_drone(predict_movement_delta(pose_dict))
-        if model_type == 'posture':
-            steer_drone(predict_movement_model_posture(pose_dict))
-        if model_type == 'gesture':
-            steer_drone(predict_movement_model_gesture(pose_dict))
+        if len(pose_dict) == 0:
+            print('No wireframes detected. Please ensure that PoseNet detects wireframes.')
+        else:
+            if model_type == 'delta':
+                steer_drone(predict_movement_delta(pose_dict))
+            if model_type == 'posture':
+                steer_drone(predict_movement_model_posture(pose_dict))
+            if model_type == 'gesture':
+                steer_drone(predict_movement_model_gesture(pose_dict))
     # except:
     #     print('Websocket connection terminated. Please re-connect.')
 
@@ -146,15 +149,15 @@ def drone_flip():
 
 
 def drone_left():
-    print('drone.rotate_cw(90)')
-    if not virtual_flight:
-        drone.rotate_cw(90)
-
-
-def drone_right():
     print('drone.rotate_ccw(90)')
     if not virtual_flight:
         drone.rotate_ccw(90)
+
+
+def drone_right():
+    print('drone.rotate_cw(90)')
+    if not virtual_flight:
+        drone.rotate_cw(90)
 
 
 def drone_land():
@@ -170,17 +173,19 @@ def json_to_dict(pose_json):
 
     x = json.loads(pose_json)
     pose_dict = {}
-    for i in range(8):
-        pose_dict[x['poses'][0]['keypoints'][i+5]['part'] +
-                  '_x'] = x['poses'][0]['keypoints'][i + 5]['position']['x']
-        pose_dict[x['poses'][0]['keypoints'][i+5]['part'] +
-                  '_y'] = x['poses'][0]['keypoints'][i + 5]['position']['y']
 
-    if model_type != 'gesture':
-        del pose_dict['leftElbow_x']
-        del pose_dict['leftElbow_y']
-        del pose_dict['rightElbow_x']
-        del pose_dict['rightElbow_y']
+    if len(x['poses']) == 1:
+        for i in range(8):
+            pose_dict[x['poses'][0]['keypoints'][i+5]['part'] +
+                    '_x'] = x['poses'][0]['keypoints'][i + 5]['position']['x']
+            pose_dict[x['poses'][0]['keypoints'][i+5]['part'] +
+                    '_y'] = x['poses'][0]['keypoints'][i + 5]['position']['y']
+
+        if model_type != 'gesture':
+            del pose_dict['leftElbow_x']
+            del pose_dict['leftElbow_y']
+            del pose_dict['rightElbow_x']
+            del pose_dict['rightElbow_y']
 
     return pose_dict
 
@@ -256,11 +261,17 @@ def predict_movement_model_gesture(pose_dict):
 
         if len(pose_df) == steps:
             file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
-            pose_sorted_df = pose_df.sort_index(ascending=False)
-            pose_sorted_df.to_csv('model_inputs/' + file_name,  index=False)
 
-            pose_np = pose_sorted_df.values.reshape(1, steps, len(cols))
-            processing_pipeline.fit_transform(pose_np)
+            # if we would need to sort (which we probably don't - can be removed if successful)
+            # pose_sorted_df = pose_df.sort_index(ascending=False)
+            # pose_sorted_df.to_csv('model_inputs/' + file_name,  index=False)
+            # pose_np = pose_sorted_df.values.reshape(1, steps, len(cols))
+
+            pose_df.to_csv('model_inputs/' + file_name,  index=False)
+            pose_np = pose_df.values.reshape(1, steps, len(cols))
+
+            pose_np = processing_pipeline.fit_transform(pose_np)
+            #print(pose_np[0][0])
             movement = np.argmax(model.predict(pose_np)[0])
 
     return movement
