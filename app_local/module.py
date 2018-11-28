@@ -1061,7 +1061,7 @@ class DataResampler():
         upsampled_idx = sorted(np.concatenate([idx[i] for i in idx]))
         
         self.X = self.orig_X[upsampled_idx,:,:]
-        self.y = self.y[upsampled_idx]
+        self.y = self.orig_y[upsampled_idx]
         
         return self.X, self.y  
     
