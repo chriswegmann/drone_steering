@@ -59,7 +59,7 @@ class YScaler(BaseEstimator, TransformerMixin):
 
 class LabelGeneratorFramebased():
     
-    def __init__(self, data_df, labels_df, ms_per_frame):
+    def __init__(self, data_df, labels_df, ms_per_frame, verbose = False):
         
         # stores the original data and the used framerate.
         self.data_df = data_df
@@ -75,8 +75,9 @@ class LabelGeneratorFramebased():
         count_cols = self.data_df.columns.shape[0]
         count_rows = self.data_df.shape[0] - steps + 1
 
-        print('steps: ' + str(steps))
-        print('self.data_df.shape[0]: ' + str(self.data_df.shape[0]))
+        if verbose:
+            print('steps: ' + str(steps))
+            print('self.data_df.shape[0]: ' + str(self.data_df.shape[0]))
         
         # transforms labels from start/end format to a label per row
         self.__y = np.zeros(count_rows)
