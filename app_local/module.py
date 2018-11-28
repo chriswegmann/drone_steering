@@ -505,23 +505,27 @@ class DataEnsembler():
 
 
     def load_data(self):
-        self.data = []
-        self.labels = []
+        try:
+            self.data = []
+            self.labels = []
 
-        if self.is_frame_based:
-            label_folder = 'labels_framebased/'
-        else:
-            label_folder = 'labels_timebased/'
+            if self.is_frame_based:
+                label_folder = 'labels_framebased/'
+            else:
+                label_folder = 'labels_timebased/'
 
-        for file_name_feat, file_name_label in self.combined_data_files_df.itertuples(index = False):
-            new_data = pd.read_csv(self.data_directory + 'features/' + file_name_feat)
-            
-            if 'label' in list(new_data):
-                new_data = new_data.drop('label', axis = 1)
-            
-            self.data.append(new_data)
-            self.labels.append(pd.read_csv(self.data_directory + label_folder + file_name_label))
-            
+            for file_name_feat, file_name_label in self.combined_data_files_df.itertuples(index = False):
+                new_data = pd.read_csv(self.data_directory + 'features/' + file_name_feat)
+                
+                if 'label' in list(new_data):
+                    new_data = new_data.drop('label', axis = 1)
+                
+                self.data.append(new_data)
+                self.labels.append(pd.read_csv(self.data_directory + label_folder + file_name_label))
+        
+        except Exception:   
+            print("Error while loading {0}/{1}".format(file_name_feat, file_name_label))
+            raise
     
     def rescale_data_frames(self, time_of_first_frame = None, verbose = False):
         act_df = self.data_source_df[(self.data_source_df["filetype"]=="features") & (self.data_source_df["actual_length"])]
