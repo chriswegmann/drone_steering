@@ -76,10 +76,10 @@ if (model_type == 'gesture'):
 
     cols_y = [col.replace('x', 'y') for col in cols_x]
 
-    cols = cols_x + cols_y
+    cols = sorted(cols_x + cols_y)
 
     pose_df = pd.DataFrame(columns=cols)
-    processing_pipeline = make_pipeline(GestureTransformer(cols))
+    processing_pipeline = make_pipeline(GestureTransformer(byrow=True,feature_names=cols))
 
 
 async def consumer_handler(websocket, path):
@@ -256,9 +256,10 @@ def predict_movement_model_gesture(pose_dict):
 
         if len(pose_df) == steps:
             file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
-            pose_df.to_csv('model_inputs/' + file_name,  index=False)
+            pose_sorted_df = pose_df.sort_index(ascending=False)
+            pose_sorted_df.to_csv('model_inputs/' + file_name,  index=False)
 
-            pose_np = pose_df.values.reshape(1, steps, len(cols))
+            pose_np = pose_sorted_df.values.reshape(1, steps, len(cols))
             processing_pipeline.fit_transform(pose_np)
             movement = np.argmax(model.predict(pose_np)[0])
 
