@@ -113,6 +113,7 @@ async def consumer_handler(websocket, path):
                     steer_drone(predict_movement_model_gesture(pose_dict))
     except:
         print('Websocket connection terminated. Please re-connect.')
+        raise
 
 
 def steer_drone(movement):
@@ -121,7 +122,6 @@ def steer_drone(movement):
 
     if ((movement == 1) & (drone_status == 'grounded')):
         threading.Thread(target=drone_takeoff).start()
-        print('Take-off initiated. Ready to take flight commands in five seconds.')
         drone_last_action = time.time()
         time.sleep(4)
     if ((drone_status != 'grounded') & ((time.time() - drone_last_action) > 1.7)):
@@ -141,32 +141,31 @@ def steer_drone(movement):
 def drone_takeoff():
     global drone_status
     drone_status = 'flying'
-    print('Take-off | drone.takeoff()')
-    print("drone_status = 'flying'")
+    print('Take-off | drone.takeoff() | Ready to take flight commands in five seconds.')
     if not virtual_flight:
         drone.takeoff()
 
 
 def drone_move():
-    print('Move | drone.move_forward(2)')
+    print('Move     | drone.move_forward(2)')
     if not virtual_flight:
         drone.move_forward(2)
 
 
 def drone_flip():
-    print("Flip | drone.flip('r')")
+    print("Flip     | drone.flip('r')")
     if not virtual_flight:
         drone.flip('r')
 
 
 def drone_left():
-    print('Left | drone.rotate_ccw(90)')
+    print('Left     | drone.rotate_ccw(90)')
     if not virtual_flight:
         drone.rotate_ccw(90)
 
 
 def drone_right():
-    print('Right | drone.rotate_cw(90)')
+    print('Right    | drone.rotate_cw(90)')
     if not virtual_flight:
         drone.rotate_cw(90)
 
@@ -174,8 +173,7 @@ def drone_right():
 def drone_land():
     global drone_status
     drone_status = 'grounded'
-    print('Land | drone.land()')
-    print("drone_status = 'grounded'")
+    print('Land     | drone.land()')
     if not virtual_flight:
         drone.land()
 
@@ -249,8 +247,8 @@ def predict_movement_model_gesture(pose_dict):
     global pose_df
     movement = 0
 
-    steps = math.floor(gesture_length/ms_per_frame_original) + 1
-    steps_ip = math.floor(gesture_length/ms_per_frame_interpolated) + 1
+    steps = math.ceil(gesture_length/ms_per_frame_original) + 1
+    steps_ip = math.ceil(gesture_length/ms_per_frame_interpolated) + 1
 
     pose_df = pose_df.append(pd.DataFrame(pose_dict, index=[0]))
 
@@ -272,11 +270,6 @@ def predict_movement_model_gesture(pose_dict):
 
         if len(pose_df) == steps:
             file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
-
-            # if we would need to sort (which we probably don't - can be removed if successful)
-            # pose_sorted_df = pose_df.sort_index(ascending=False)
-            # pose_sorted_df.to_csv('model_inputs/' + file_name,  index=False)
-            # pose_np = pose_sorted_df.values.reshape(1, steps, len(cols))
 
             pose_df.to_csv('model_inputs/' + file_name,  index=False)
             pose_np = pose_df.values.reshape(1, steps, len(cols))
