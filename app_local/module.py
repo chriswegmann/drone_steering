@@ -81,7 +81,7 @@ class LabelGeneratorFramebased():
         # transforms labels from start/end format to a label per row
         self.__y = np.zeros(count_rows)
         for index, row in self.labels_df.iterrows():
-            for i in range(row['real_start'], row['real_end'] + 1):
+            for i in range(row['real_start'] - steps, row['real_end'] - steps + 1):
                 self.__y[i] = row['label']
 
         # transforms frames into frame sets containing multiple frames
@@ -662,7 +662,7 @@ class DataEnsembler():
 
 
 
-    def assemble_data(self, tolerance_range = None, max_error = None, framelength_strategy = 'PoseNet'):
+    def assemble_data(self, tolerance_range = None, max_error = None, framelength_strategy = 'PoseNet', verbose = False):
         
         n = len(self.data)
         self.LabelGenerators = []
@@ -671,8 +671,9 @@ class DataEnsembler():
         
         for i in range(n):
             if self.is_frame_based:
-                print('-------------------------------------')
-                print('File ID: ' + str(i))
+                if verbose:
+                    print('-------------------------------------')
+                    print('File ID: ' + str(i))
                 lg = LabelGeneratorFramebased(
                     data_df = self.data[i],
                     labels_df = self.labels[i],
