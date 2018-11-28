@@ -18,9 +18,20 @@ from scipy.interpolate import interp1d
 
 warnings.filterwarnings("ignore")
 
+print("Which model do you want to use? 1 = delta, 2 = posture, 3 = gesture")
+model_type_id = input()
+
+if int(model_type_id) == 1:
+    model_type = 'delta'
+if int(model_type_id) == 2:
+    model_type = 'posture'
+if int(model_type_id) == 3:
+    model_type = 'gesture'
+
+print('You selected model type "' + model_type + '".')
+
 # set general parameters
 virtual_flight = True        # flight commands are printed, but not sent to drone
-model_type = 'posture'       # allowed values are 'delta', 'posture', 'gesture'
 ms_per_frame_original = 120
 gesture_length = 2000
 
@@ -88,20 +99,20 @@ async def consumer_handler(websocket, path):
     print(model_type)
 
     print('Accepting incoming snapshots. Waiting for take-off signal.')
-#    try:
-    async for pose_json in websocket:
-        pose_dict = json_to_dict(pose_json)
-        if len(pose_dict) == 0:
-            print('No wireframes detected. Please ensure that PoseNet detects wireframes.')
-        else:
-            if model_type == 'delta':
-                steer_drone(predict_movement_delta(pose_dict))
-            if model_type == 'posture':
-                steer_drone(predict_movement_model_posture(pose_dict))
-            if model_type == 'gesture':
-                steer_drone(predict_movement_model_gesture(pose_dict))
-    # except:
-    #     print('Websocket connection terminated. Please re-connect.')
+    try:
+        async for pose_json in websocket:
+            pose_dict = json_to_dict(pose_json)
+            if len(pose_dict) == 0:
+                print('No wireframes detected. Please ensure that PoseNet detects wireframes.')
+            else:
+                if model_type == 'delta':
+                    steer_drone(predict_movement_delta(pose_dict))
+                if model_type == 'posture':
+                    steer_drone(predict_movement_model_posture(pose_dict))
+                if model_type == 'gesture':
+                    steer_drone(predict_movement_model_gesture(pose_dict))
+    except:
+        print('Websocket connection terminated. Please re-connect.')
 
 
 def steer_drone(movement):
@@ -130,32 +141,32 @@ def steer_drone(movement):
 def drone_takeoff():
     global drone_status
     drone_status = 'flying'
-    print('drone.takeoff()')
+    print('Take-off | drone.takeoff()')
     print("drone_status = 'flying'")
     if not virtual_flight:
         drone.takeoff()
 
 
 def drone_move():
-    print('drone.move_forward(2)')
+    print('Move | drone.move_forward(2)')
     if not virtual_flight:
         drone.move_forward(2)
 
 
 def drone_flip():
-    print("drone.flip('r')")
+    print("Flip | drone.flip('r')")
     if not virtual_flight:
         drone.flip('r')
 
 
 def drone_left():
-    print('drone.rotate_ccw(90)')
+    print('Left | drone.rotate_ccw(90)')
     if not virtual_flight:
         drone.rotate_ccw(90)
 
 
 def drone_right():
-    print('drone.rotate_cw(90)')
+    print('Right | drone.rotate_cw(90)')
     if not virtual_flight:
         drone.rotate_cw(90)
 
@@ -163,7 +174,7 @@ def drone_right():
 def drone_land():
     global drone_status
     drone_status = 'grounded'
-    print('drone.land()')
+    print('Land | drone.land()')
     print("drone_status = 'grounded'")
     if not virtual_flight:
         drone.land()
@@ -174,7 +185,7 @@ def json_to_dict(pose_json):
     x = json.loads(pose_json)
     pose_dict = {}
 
-    if len(x['poses']) == 1:
+    if len(x['poses']) > 0:
         for i in range(8):
             pose_dict[x['poses'][0]['keypoints'][i+5]['part'] +
                     '_x'] = x['poses'][0]['keypoints'][i + 5]['position']['x']
@@ -271,7 +282,6 @@ def predict_movement_model_gesture(pose_dict):
             pose_np = pose_df.values.reshape(1, steps, len(cols))
 
             pose_np = processing_pipeline.fit_transform(pose_np)
-            #print(pose_np[0][0])
             movement = np.argmax(model.predict(pose_np)[0])
 
     return movement
@@ -286,13 +296,11 @@ def interpolate(pose_df, ms_per_frame_interpolated):
     for feat in features:
         f = pose_df[feat].values
         
-        cub_f = interp1d(
-                    t, f, 
-                    kind = 'cubic', 
-                    fill_value = (f[0],f[-1]), 
-                    bounds_error = False,
-                    assume_sorted=True
-                )
+        cub_f = interp1d(t, f, 
+                         kind = 'cubic', 
+                         fill_value = (f[0],f[-1]), 
+                         bounds_error = False,
+                         assume_sorted=True)
         
         interpolators[feat] = cub_f
         
@@ -305,7 +313,6 @@ def interpolate(pose_df, ms_per_frame_interpolated):
 
     for feat in features:
         interp_df[feat] = interpolators[feat](t_new)
-    
     
     return interp_df
 
