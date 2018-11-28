@@ -982,3 +982,100 @@ class DataFrameInterpolator():
             print("\t",self.t_new[0:5],"...",self.t_new[-5:],'\n')
             print("Original DataFrame Shape:", self.__orig_shape)
             print("New DataFrame Shape:", self.new_df.shape)
+
+
+
+
+
+class DataResampler():
+    
+    def __init__(self):
+        pass
+        
+    
+    def fit(self, X, y):
+        if X.shape[0] != y.shape[0]:
+            raise AssertionError("First Dimension of Argument X and y have to be equal")
+            
+        self.orig_y = y.copy().astype("int32")
+        self.orig_X = X.copy()
+        
+        self.X = self.orig_X.copy()
+        self.y = self.orig_y.copy()
+            
+        self.labels = sorted(set(y.astype("int32")))
+        
+        maxl = max(self.labels)
+        
+        self.indices = {}
+        for i in self.labels:
+            self.indices[i] = np.where(np.isclose(y,i))[0]
+            
+            
+    def restrict_zero_labels(self, n):
+        y = self.orig_y.copy()
+        
+        n0 = len(self.indices[0])
+        print("-------------------------------------")
+        print("Current number of zero-labels:", n0)
+        
+        if n0 <= n:
+            print("Target number of zero-labels is bigger than current number. No changes!")
+        elif n < 0:
+            print("Target number of zero-labels was negative. Treated as zero!")
+        else:
+            zero_idx = np.random.choice(self.indices[0], n, replace=False)
+            other_labels_idx = np.concatenate([self.indices[i] for i in self.indices.keys() if i != 0])
+            new_idx = sorted(np.concatenate([zero_idx, other_labels_idx]))
+            
+        
+        print("New number of zero-labels:", n)
+        
+        self.X = self.X[new_idx,:,:]
+        self.y = self.y[new_idx]
+
+        return self.X, self.y 
+    
+    
+    def upsample(self, n = None):
+        if n is None:
+            n = len(self.indices[0])
+        elif n < 0:
+            n = 0
+        
+        a = {} 
+        b = {}
+        idx = {}
+            
+        for i in self.indices.keys():
+            a[i] = min(n, len(self.indices[i]))
+            diff = n - len(self.indices[i])
+            b[i] = max(0, diff)
+            
+            idx_a = np.random.choice(self.indices[i], a[i], replace = False)
+            idx_b = np.random.choice(self.indices[i], b[i], replace = True)
+            
+            idx[i] = sorted(np.concatenate([idx_a, idx_b]))
+            
+        
+        upsampled_idx = sorted(np.concatenate([idx[i] for i in idx]))
+        
+        self.X = self.orig_X[upsampled_idx,:,:]
+        self.y = self.y[upsampled_idx]
+        
+        return self.X, self.y  
+    
+    def display_information(self):
+        df = pd.DataFrame(columns=["abs_orig","pct_orig","abs_current","pct_current"],index = self.labels)
+        
+        n = len(self.y)
+        
+        for l in self.labels:
+            nl = len(self.y[self.y == l])
+            
+            df.loc[l,"abs_orig"] = len(self.indices[l])
+            df.loc[l,"pct_orig"] = np.round(100*len(self.indices[l])/len(self.orig_y),2)
+            df.loc[l,"abs_current"] = nl
+            df.loc[l,"pct_current"] = np.round(100*nl/n,2)
+              
+        return df
