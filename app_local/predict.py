@@ -113,7 +113,7 @@ if (model_type == 'gesture'):
         cols_without_ms = sorted(cols_x + cols_y)
         processing_pipeline = make_pipeline(GestureTransformer(byrow=True,feature_names=cols_without_ms))
     else:
-        model = load_model('../models/model_' + model_type + '.h5')
+        model = load_model('../models/model_' + model_type + '_relaxed_labelling.h5')
         cols = sorted(cols_x + cols_y)
         processing_pipeline = make_pipeline(GestureTransformer(byrow=True,feature_names=cols))
 
