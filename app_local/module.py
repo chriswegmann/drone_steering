@@ -534,11 +534,12 @@ class DataEnsembler():
         act_lens = pd.merge(
             self.combined_data_files_df,
             act_df,
-            how = 'inner',
+            how = 'left',
             left_on = ['filename_features'],
-            right_on = ['filename'],
-            left_index = True
+            right_on = ['filename']
         )[['filename_features','actual_length']]
+
+        act_lens[act_lens["actual_length"].apply(lambda x: ~np.isnan(x))]
 
         di = DataFrameInterpolator()
         
