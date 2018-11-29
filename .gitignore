@@ -12,6 +12,7 @@
 Tutorial_DataSets/
 __pycache__/
 app_local/__pycache__/
+app_local/model_inputs/
 
 # pycache files #
 #################
