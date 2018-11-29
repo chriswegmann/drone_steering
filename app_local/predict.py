@@ -16,12 +16,14 @@ from sklearn.pipeline import make_pipeline, make_union
 import math
 import warnings
 from scipy.interpolate import interp1d
+from os import listdir
+import re
 
 warnings.filterwarnings("ignore")
 
-# get parameters set at runtime
+# get model type
 print('')
-print("Which model do you want to use? 1 = delta, 2 = posture, 3 = gesture")
+print("Which model type do you want to use? 1 = delta, 2 = posture, 3 = gesture")
 model_type_id = input()
 if int(model_type_id) == 1:
     model_type = 'delta'
@@ -31,6 +33,7 @@ if int(model_type_id) == 3:
     model_type = 'gesture'
 print('The "' + model_type + '" model will be used.')
 
+# get interpolation yes / no
 if int(model_type_id) == 3:
     print('')
     print("Do you want to use interpolation? y = yes, n = no")
@@ -38,11 +41,34 @@ if int(model_type_id) == 3:
     if str(use_interpolation_id)=='y':
         use_interpolation = True
         print('The PoseNet wireframes will be interpolated.')
+        interpolation = 'ip'
     else:
         use_interpolation = False
         print('The PoseNet wireframes will not be interpolated.')
+        interpolation = 'nip'
 print('')
 
+# get model instance
+if int(model_type_id) == 3:
+    file_names = listdir('../models/')
+    pattern = '(?P<model_type>model_' + model_type + '{1}_.*)(?P<ip_nip>' + interpolation + '{1})(?P<model_parameters>.+)(?P<suffix>.h5)'
+    reg = re.compile(pattern)
+    matches = []
+    for file_name in file_names:
+        match = reg.search(file_name)
+        if match:
+            matches.append(match)
+    models = []
+    for i, match in enumerate(matches):
+        model = match.groupdict()
+        models.append(model['model_type'] + model['ip_nip'] + model['model_parameters'])
+    print('Which model instance do you want to use?')
+    for i in range(len(models)):
+        print(str(i) + ' | ' + models[i])
+    model_instance = input()
+    print('')
+
+# decide if drone or virtual flight is used
 print("Do you connect to the drone or do a virtual flight? d = drone, v = virtual flight")
 virtual_flight_id = input()
 if str(virtual_flight_id)=='d':
@@ -52,7 +78,6 @@ else:
     virtual_flight = True
     print('You will see the flight commands printed on the screen.')
 print('')
-
 
 # set interpolation parameters
 ms_per_frame_original = 120
@@ -76,25 +101,19 @@ movements = {0: 'not detected',
 
 # load model and initiate pipeline
 if (model_type == 'posture'):
-
     model = load_model('../models/model_' + model_type + '.h5')
-
     cols_x = ['leftShoulder_x',
               'rightShoulder_x',
               'leftWrist_x',
               'rightWrist_x',
               'leftHip_x',
               'rightHip_x']
-
     cols_y = [col.replace('x', 'y') for col in cols_x]
-
     processing_pipeline = make_pipeline(XCentralizer(cols_x),
                                         YCentralizer(cols_y),
                                         YScaler())
 
 if (model_type == 'gesture'):
-
-
     cols_x = ['leftShoulder_x',
               'rightShoulder_x',
               'leftWrist_x',
@@ -104,19 +123,18 @@ if (model_type == 'gesture'):
               'leftElbow_x',
               'rightElbow_x']
     cols_y = [col.replace('x', 'y') for col in cols_x]
-
+    model = load_model('../models/' + models[int(model_instance)] + '.h5')
     if use_interpolation:
-        model = load_model('../models/model_' + model_type + '_interpolation_' + str(ms_per_frame_interpolated) + '.h5')
+        # model = load_model('../models/model_' + model_type + '_interpolation_' + str(ms_per_frame_interpolated) + '.h5')
         start_time = timeit.default_timer()
         ms_since_start = timeit.default_timer()
         cols = sorted(cols_x + cols_y + ['ms_since_start'])
         cols_without_ms = sorted(cols_x + cols_y)
         processing_pipeline = make_pipeline(GestureTransformer(byrow=True,feature_names=cols_without_ms))
     else:
-        model = load_model('../models/model_' + model_type + '_relaxed_labelling.h5')
+        # model = load_model('../models/model_' + model_type + '_relaxed_labelling.h5')
         cols = sorted(cols_x + cols_y)
         processing_pipeline = make_pipeline(GestureTransformer(byrow=True,feature_names=cols))
-
     pose_df = pd.DataFrame(columns=cols)
 
 

@@ -59,12 +59,13 @@ class YScaler(BaseEstimator, TransformerMixin):
 
 class LabelGeneratorFramebased():
     
-    def __init__(self, data_df, labels_df, ms_per_frame, verbose = False):
+    def __init__(self, data_df, labels_df, ms_per_frame, tolerance_range = 0, verbose = False):
         
         # stores the original data and the used framerate.
         self.data_df = data_df
         self.labels_df = labels_df
         self.ms_per_frame = ms_per_frame
+        self.tolerance_range = tolerance_range
 
         time_cols = ['ms_since_last_frame','ms_since_start']
         for col in time_cols:
@@ -82,7 +83,7 @@ class LabelGeneratorFramebased():
         # transforms labels from start/end format to a label per row
         self.__y = np.zeros(count_rows)
         for index, row in self.labels_df.iterrows():
-            for i in range(row['real_start'] - steps, row['real_end'] - steps + 1):
+            for i in range(row['real_start'] - steps - tolerance_range, row['real_end'] - steps + tolerance_range + 1):
                 self.__y[i] = row['label']
 
         # transforms frames into frame sets containing multiple frames
@@ -667,7 +668,7 @@ class DataEnsembler():
 
 
 
-    def assemble_data(self, tolerance_range = None, max_error = None, framelength_strategy = 'PoseNet', verbose = False):
+    def assemble_data(self, tolerance_range = None, max_error = None, slack = 0, framelength_strategy = 'PoseNet', verbose = False):
         
         n = len(self.data)
         self.LabelGenerators = []
@@ -682,7 +683,8 @@ class DataEnsembler():
                 lg = LabelGeneratorFramebased(
                     data_df = self.data[i],
                     labels_df = self.labels[i],
-                    ms_per_frame = self.ms_per_frame)
+                    ms_per_frame = self.ms_per_frame,
+                    tolerance_range = tolerance_range)
             else:
                 if tolerance_range is None or max_error is None:
                     raise ValueError("You are currently working with a time based LabelGenerator. Hence, you must provide a tolerance range and a max error."\
