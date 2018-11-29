@@ -6,6 +6,7 @@ import asyncio
 import websockets
 import json
 import time
+import timeit
 import pandas as pd
 import numpy as np
 import h5py
@@ -18,9 +19,9 @@ from scipy.interpolate import interp1d
 
 warnings.filterwarnings("ignore")
 
+print('')
 print("Which model do you want to use? 1 = delta, 2 = posture, 3 = gesture")
 model_type_id = input()
-
 if int(model_type_id) == 1:
     model_type = 'delta'
 if int(model_type_id) == 2:
@@ -28,15 +29,27 @@ if int(model_type_id) == 2:
 if int(model_type_id) == 3:
     model_type = 'gesture'
 
-print('You selected model type "' + model_type + '".')
+print('The "' + model_type + '" model will be used.')
+
+if int(model_type_id) == 3:
+    print('')
+    print("Do you want to use interpolation? y = yes, n = no")
+    use_interpolation_id = input()
+    if str(use_interpolation_id)=='y':
+        use_interpolation = True
+        print('The PoseNet wireframes will be interpolated.')
+    if str(use_interpolation_id)=='n':
+        use_interpolation = False
+        print('The PoseNet wireframes will not be interpolated.')
+
+print('')
 
 # set general parameters
-virtual_flight = True        # flight commands are printed, but not sent to drone
+virtual_flight = True
 ms_per_frame_original = 120
 gesture_length = 2000
 
 # set interpolation parameters
-use_interpolation = True
 ms_per_frame_interpolated = 50
 add_interpol_frames = 3
 
@@ -74,7 +87,6 @@ if (model_type == 'posture'):
 
 if (model_type == 'gesture'):
 
-    model = load_model('../models/model_' + model_type + '.h5')
 
     cols_x = ['leftShoulder_x',
               'rightShoulder_x',
@@ -84,13 +96,21 @@ if (model_type == 'gesture'):
               'rightHip_x',
               'leftElbow_x',
               'rightElbow_x']
-
     cols_y = [col.replace('x', 'y') for col in cols_x]
 
-    cols = sorted(cols_x + cols_y)
+    if use_interpolation:
+        model = load_model('../models/model_' + model_type + '_interpolation_' + str(ms_per_frame_interpolated) + '.h5')
+        start_time = timeit.default_timer()
+        ms_since_start = timeit.default_timer()
+        cols = sorted(cols_x + cols_y + ['ms_since_start'])
+        cols_without_ms = sorted(cols_x + cols_y)
+        processing_pipeline = make_pipeline(GestureTransformer(byrow=True,feature_names=cols_without_ms))
+    else:
+        model = load_model('../models/model_' + model_type + '.h5')
+        cols = sorted(cols_x + cols_y)
+        processing_pipeline = make_pipeline(GestureTransformer(byrow=True,feature_names=cols))
 
     pose_df = pd.DataFrame(columns=cols)
-    processing_pipeline = make_pipeline(GestureTransformer(byrow=True,feature_names=cols))
 
 
 async def consumer_handler(websocket, path):
@@ -245,35 +265,44 @@ def predict_movement_model_posture(pose_dict):
 def predict_movement_model_gesture(pose_dict):
 
     global pose_df
+    global start_time
+    global ms_since_start
     movement = 0
 
     steps = math.ceil(gesture_length/ms_per_frame_original) + 1
     steps_ip = math.ceil(gesture_length/ms_per_frame_interpolated) + 1
 
-    pose_df = pose_df.append(pd.DataFrame(pose_dict, index=[0]))
-
     if use_interpolation:
-        if len(pose_df) > (steps + add_interpol_frames):
-            pose_df = pose_df.iloc[1:]
+        pose_new = pd.DataFrame(pose_dict, index=[0])
+        pose_new.at[0,'ms_since_start'] = round(1000*(timeit.default_timer()-start_time))
+        pose_df = pose_df.append(pose_new)
+        pose_df.reset_index(inplace=True, drop=True)
 
-        if len(pose_df) == (steps + add_interpol_frames):
+        # keep only latest two seconds and the additional frames needed for interpolation
+        cut_off = pose_df.iloc[pose_df['ms_since_start'].argmax()]['ms_since_start'] - 2000
+        keep_df = pose_df.loc[pose_df['ms_since_start']>=cut_off]
+        discarded_df = pose_df.loc[pose_df['ms_since_start']<cut_off]
+        pose_df = pd.concat([discarded_df.tail(add_interpol_frames), keep_df]).reset_index(drop=True)
+
+        if discarded_df.shape[0] > add_interpol_frames:
             pose_ip_df = interpolate(pose_df, ms_per_frame_interpolated)
+
             file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
             pose_ip_df.to_csv('model_inputs/' + file_name,  index=False)
 
-            pose_np = pose_ip_df.values.reshape(1, steps_ip, len(cols))
-            processing_pipeline.fit_transform(pose_np)
+            pose_np = pose_ip_df.drop(['ms_since_start'], axis=1).values.reshape(1, steps_ip, -1)
+            pose_np = processing_pipeline.fit_transform(pose_np)
             movement = np.argmax(model.predict(pose_np)[0])
     else:
+        pose_df = pose_df.append(pd.DataFrame(pose_dict, index=[0]))
         if len(pose_df) > steps:
             pose_df = pose_df.iloc[1:]
 
         if len(pose_df) == steps:
             file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
-
             pose_df.to_csv('model_inputs/' + file_name,  index=False)
-            pose_np = pose_df.values.reshape(1, steps, len(cols))
 
+            pose_np = pose_df.values.reshape(1, steps, len(cols))
             pose_np = processing_pipeline.fit_transform(pose_np)
             movement = np.argmax(model.predict(pose_np)[0])
 
