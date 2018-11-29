@@ -1090,3 +1090,30 @@ class DataResampler():
             df.loc[l,"pct_current"] = np.round(100*nl/n,2)
               
         return df
+    
+    
+    def train_test_split(self, fraction):
+        
+        remove_idx = {}
+        keep_idx = {}
+        for l in self.labels:
+            nl = len(self.indices[l])
+            rn = int(np.round(nl*fraction))
+            remove_idx[l] = sorted(np.random.choice(self.indices[l], rn, replace = False))
+            keep_idx[l] = sorted(set(self.indices[l]) - set(remove_idx[l]))
+          
+        remove = sorted(np.concatenate([remove_idx[i] for i in remove_idx]))
+        keep = sorted(np.concatenate([keep_idx[i] for i in keep_idx]))
+        
+        remove = np.random.permutation(remove)
+        keep = np.random.permutation(keep)
+        
+        self.X = self.orig_X[keep,:,:]
+        self.y = self.orig_y[keep]
+        
+        x_test = self.orig_X[remove,:,:]
+        y_test = self.orig_y[remove]
+        
+        return x_test, y_test
+    
+            
