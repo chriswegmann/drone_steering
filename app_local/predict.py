@@ -19,6 +19,7 @@ from scipy.interpolate import interp1d
 
 warnings.filterwarnings("ignore")
 
+# get parameters set at runtime
 print('')
 print("Which model do you want to use? 1 = delta, 2 = posture, 3 = gesture")
 model_type_id = input()
@@ -28,7 +29,6 @@ if int(model_type_id) == 2:
     model_type = 'posture'
 if int(model_type_id) == 3:
     model_type = 'gesture'
-
 print('The "' + model_type + '" model will be used.')
 
 if int(model_type_id) == 3:
@@ -38,18 +38,25 @@ if int(model_type_id) == 3:
     if str(use_interpolation_id)=='y':
         use_interpolation = True
         print('The PoseNet wireframes will be interpolated.')
-    if str(use_interpolation_id)=='n':
+    else:
         use_interpolation = False
         print('The PoseNet wireframes will not be interpolated.')
-
 print('')
 
-# set general parameters
-virtual_flight = True
-ms_per_frame_original = 120
-gesture_length = 2000
+print("Do you connect to the drone or do a virtual flight? d = drone, v = virtual flight")
+virtual_flight_id = input()
+if str(virtual_flight_id)=='d':
+    virtual_flight = False
+    print('Connecting to drone...')
+else:
+    virtual_flight = True
+    print('You will see the flight commands printed on the screen.')
+print('')
+
 
 # set interpolation parameters
+ms_per_frame_original = 120
+gesture_length = 2000
 ms_per_frame_interpolated = 50
 add_interpol_frames = 3
 
@@ -121,6 +128,14 @@ async def consumer_handler(websocket, path):
     print('Accepting incoming snapshots. Waiting for take-off signal.')
     try:
         async for pose_json in websocket:
+            if 'start' in locals():
+                start = stop
+            else:
+                start = timeit.default_timer()
+            stop = timeit.default_timer()
+            ms_since_last_frame = str(round(1000*(stop-start)))
+            print('Snapshot captured in ' + ms_since_last_frame + 'ms')
+
             pose_dict = json_to_dict(pose_json)
             if len(pose_dict) == 0:
                 print('No wireframes detected. Please ensure that PoseNet detects wireframes.')
@@ -133,7 +148,7 @@ async def consumer_handler(websocket, path):
                     steer_drone(predict_movement_model_gesture(pose_dict))
     except:
         print('Websocket connection terminated. Please re-connect.')
-        raise
+        #raise
 
 
 def steer_drone(movement):
