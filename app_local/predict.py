@@ -79,7 +79,8 @@ else:
     print('You will see the flight commands printed on the screen.')
 print('')
 
-# set interpolation parameters
+# set static parameters
+show_current_framelength = False
 ms_per_frame_original = 120
 gesture_length = 2000
 ms_per_frame_interpolated = 50
@@ -125,14 +126,12 @@ if (model_type == 'gesture'):
     cols_y = [col.replace('x', 'y') for col in cols_x]
     model = load_model('../models/' + models[int(model_instance)] + '.h5')
     if use_interpolation:
-        # model = load_model('../models/model_' + model_type + '_interpolation_' + str(ms_per_frame_interpolated) + '.h5')
         start_time = timeit.default_timer()
         ms_since_start = timeit.default_timer()
         cols = sorted(cols_x + cols_y + ['ms_since_start'])
         cols_without_ms = sorted(cols_x + cols_y)
         processing_pipeline = make_pipeline(GestureTransformer(byrow=True,feature_names=cols_without_ms))
     else:
-        # model = load_model('../models/model_' + model_type + '_relaxed_labelling.h5')
         cols = sorted(cols_x + cols_y)
         processing_pipeline = make_pipeline(GestureTransformer(byrow=True,feature_names=cols))
     pose_df = pd.DataFrame(columns=cols)
@@ -146,14 +145,14 @@ async def consumer_handler(websocket, path):
     print('Accepting incoming snapshots. Waiting for take-off signal.')
     try:
         async for pose_json in websocket:
-            if 'start' in locals():
-                start = stop
-            else:
-                start = timeit.default_timer()
-            stop = timeit.default_timer()
-            ms_since_last_frame = str(round(1000*(stop-start)))
-            print('Snapshot captured in ' + ms_since_last_frame + 'ms')
-
+            if show_current_framelength:
+                if 'start' in locals():
+                    start = stop
+                else:
+                    start = timeit.default_timer()
+                stop = timeit.default_timer()
+                ms_since_last_frame = str(round(1000*(stop-start)))
+                print('Snapshot captured in ' + ms_since_last_frame + 'ms')
             pose_dict = json_to_dict(pose_json)
             if len(pose_dict) == 0:
                 print('No wireframes detected. Please ensure that PoseNet detects wireframes.')
@@ -194,31 +193,36 @@ def steer_drone(movement):
 def drone_takeoff():
     global drone_status
     drone_status = 'flying'
-    print('Take-off | drone.takeoff() | Ready to take flight commands in five seconds.')
+    show_movement(1)
+    # print('Take-off | drone.takeoff() | Ready to take flight commands in five seconds.')
     if not virtual_flight:
         drone.takeoff()
 
 
 def drone_move():
-    print('Move     | drone.move_forward(2)')
+    show_movement(2)
+    # print('Move     | drone.move_forward(2)')
     if not virtual_flight:
         drone.move_forward(2)
 
 
 def drone_flip():
-    print("Flip     | drone.flip('r')")
+    show_movement(3)
+    # print("Flip     | drone.flip('r')")
     if not virtual_flight:
         drone.flip('r')
 
 
 def drone_left():
-    print('Left     | drone.rotate_ccw(90)')
+    show_movement(4)
+    # print('Left     | drone.rotate_ccw(90)')
     if not virtual_flight:
         drone.rotate_ccw(90)
 
 
 def drone_right():
-    print('Right    | drone.rotate_cw(90)')
+    show_movement(5)
+    # print('Right    | drone.rotate_cw(90)')
     if not virtual_flight:
         drone.rotate_cw(90)
 
@@ -226,9 +230,116 @@ def drone_right():
 def drone_land():
     global drone_status
     drone_status = 'grounded'
-    print('Land     | drone.land()')
+    show_movement(6)
+    # print('Land     | drone.land()')
     if not virtual_flight:
         drone.land()
+
+
+def show_movement(movement):
+
+    if movement == 1:  # take_off
+        print('                                                  ')
+        print('                        XX                        ')
+        print('                      XXXXXX                      ')
+        print('                    XXXXXXXXXX                    ')
+        print('                  XXXXXXXXXXXXXX                  ')
+        print('                XXXXXXXXXXXXXXXXXX                ')
+        print('              XXXXXXXXXXXXXXXXXXXXXX              ')
+        print('            XXXXXXXXXXXXXXXXXXXXXXXXXX            ')
+        print('          XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX          ')
+        print('                  XXXXXXXXXXXXXX                  ')
+        print('                  XXXXXXXXXXXXXX                  ')
+        print('                  XXXXXXXXXXXXXX                  ')
+        print('                  XXXXXXXXXXXXXX                  ')
+        print('                  XXXXXXXXXXXXXX                  ')
+        print('                                                  ')
+        print('--------------------------------------------------')
+    if movement == 2:  # move
+        print('                                                  ')
+        print('           X             X                        ')
+        print('           XXX           XXX                      ')
+        print('           XXXXX         XXXXX                    ')
+        print('           XXXXXXX       XXXXXXX                  ')
+        print('           XXXXXXXXX     XXXXXXXXX                ')
+        print('           XXXXXXXXXXX   XXXXXXXXXXX              ')
+        print('           XXXXXXXXXXXXX XXXXXXXXXXXXX            ')
+        print('           XXXXXXXXXXX   XXXXXXXXXXX              ')
+        print('           XXXXXXXXX     XXXXXXXXX                ')
+        print('           XXXXXXX       XXXXXXX                  ')
+        print('           XXXXX         XXXXX                    ')
+        print('           XXX           XXX                      ')
+        print('           X             X                        ')
+        print('                                                  ')
+        print('--------------------------------------------------')
+    if movement == 3:  # flip
+        print('                                                  ')
+        print('                 XXXXX     XXXXX                  ')
+        print('              XXXXXX         XXXXXX               ')
+        print('           XXXXX                 XXXXX            ')
+        print('         XXXXX                     XXXXX          ')
+        print('        XXXXX                       XXXXX         ')
+        print('        XXXX                         XXXX         ')
+        print('       XXXX                           XXXX        ')
+        print('        XXXX                         XXXX         ')
+        print('        XXXXX                       XXXXX         ')
+        print('         XXXXX                     XXXXX          ')
+        print('           XXXXX                 XXXXX            ')
+        print('              XXXXXX         XXXXXX               ')
+        print('                 XXXXX     XXXXX                  ')
+        print('                                                  ')
+        print('--------------------------------------------------')
+    if movement == 4:  # left
+        print('                                                  ')
+        print('                      XXXX                        ')
+        print('                    XXXX                          ')
+        print('                  XXXX                            ')
+        print('                XXXX                              ')
+        print('              XXXXXXXXXXXXXXXXXXXXXXXX            ')
+        print('            XXXXXXXXXXXXXXXXXXXXXXXXXX            ')
+        print('          XXXXXXXXXXXXXXXXXXXXXXXXXXXX            ')
+        print('            XXXXXXXXXXXXXXXXXXXXXXXXXX            ')
+        print('              XXXXXXXXXXXXXXXXXXXXXXXX            ')
+        print('                XXXX                              ')
+        print('                  XXXX                            ')
+        print('                    XXXX                          ')
+        print('                      XXXX                        ')
+        print('                                                  ')
+        print('--------------------------------------------------')
+    if movement == 5:  # right
+        print('                                                  ')
+        print('                      XXXX                        ')
+        print('                        XXXX                      ')
+        print('                          XXXX                    ')
+        print('                            XXXX                  ')
+        print('          XXXXXXXXXXXXXXXXXXXXXXXX                ')
+        print('          XXXXXXXXXXXXXXXXXXXXXXXXXX              ')
+        print('          XXXXXXXXXXXXXXXXXXXXXXXXXXXX            ')
+        print('          XXXXXXXXXXXXXXXXXXXXXXXXXX              ')
+        print('          XXXXXXXXXXXXXXXXXXXXXXXX                ')
+        print('                            XXXX                  ')
+        print('                          XXXX                    ')
+        print('                        XXXX                      ')
+        print('                      XXXX                        ')
+        print('                                                  ')
+        print('--------------------------------------------------')
+    if movement == 6:  # land
+        print('                                                  ')
+        print('                                                  ')
+        print('                   XXXXXXXXXX                     ')
+        print('                XXXXXXXXXXXXXXXX                  ')
+        print('             XXXXXXXXXXXXXXXXXXXXXX               ')
+        print('          XXXXXXXXXXXXXXXXXXXXXXXXXXXX            ')
+        print('          XXXXXXXXXXXXXXXXXXXXXXXXXXXX            ')
+        print('          XXXXXXXXXXXXXXXXXXXXXXXXXXXX            ')
+        print('          XXXXXXXXXXXXXXXXXXXXXXXXXXXX            ')
+        print('          XXXXXXXXXXXXXXXXXXXXXXXXXXXX            ')
+        print('             XXXXXXXXXXXXXXXXXXXXXX               ')
+        print('                XXXXXXXXXXXXXXXX                  ')
+        print('                   XXXXXXXXXX                     ')
+        print('                                                  ')
+        print('                                                  ')
+        print('--------------------------------------------------')
 
 
 def json_to_dict(pose_json):
