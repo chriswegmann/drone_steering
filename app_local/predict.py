@@ -18,6 +18,7 @@ import warnings
 from scipy.interpolate import interp1d
 from os import listdir
 import re
+from sklearn.externals import joblib
 
 warnings.filterwarnings("ignore")
 
@@ -51,22 +52,40 @@ print('')
 # get model instance
 if int(model_type_id) == 3:
     file_names = listdir('../models/')
-    pattern = '(?P<model_type>model_' + model_type + '{1}_.*)(?P<ip_nip>' + interpolation + '{1})(?P<model_parameters>.+)(?P<suffix>.h5)'
+
+
+    grp_model_type = '(?P<model_type>model_'+ model_type + '_[^_]+)'
+    grp_ip = '(?P<ip_nip>' + interpolation + '\d*)'
+    grp_model_params = '(?P<model_parameters>.+)'
+    grp_suffix = '(?P<suffix>pkl|h5)'
+    pattern = '(?P<file_name>' + grp_model_type + '_' + grp_ip + '_' + grp_model_params + '.' + grp_suffix + ')'
+
+
     reg = re.compile(pattern)
+
     matches = []
     for file_name in file_names:
         match = reg.search(file_name)
         if match:
             matches.append(match)
-    models = []
+
+    groups = []
     for i, match in enumerate(matches):
-        model = match.groupdict()
-        models.append(model['model_type'] + model['ip_nip'] + model['model_parameters'])
+        group = match.groupdict()
+        groups.append(group)
+
+
+    models = []
+    for grp in groups:
+        models.append(grp["file_name"])
+
+
     print('Which model instance do you want to use?')
     for i in range(len(models)):
         print(str(i) + ' | ' + models[i])
     model_instance = input()
     print('')
+
 
 # decide if drone or virtual flight is used
 print("Do you connect to the drone or do a virtual flight? d = drone, v = virtual flight")
@@ -124,7 +143,13 @@ if (model_type == 'gesture'):
               'leftElbow_x',
               'rightElbow_x']
     cols_y = [col.replace('x', 'y') for col in cols_x]
-    model = load_model('../models/' + models[int(model_instance)] + '.h5')
+    
+    model_file_name = models[int(model_instance)]
+    if model_file_name.endswith('pkl'):
+        model = joblib.load('../models/' + model_file_name) 
+    elif model_file_name.endswith('h5'):
+        model = load_model('../models/' + model_file_name)
+    
     if use_interpolation:
         start_time = timeit.default_timer()
         ms_since_start = timeit.default_timer()
