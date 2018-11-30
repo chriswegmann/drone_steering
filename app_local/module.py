@@ -1018,8 +1018,19 @@ class DataResampler():
         for i in self.labels:
             self.indices[i] = np.where(np.isclose(y,i))[0]
             
+        n = self.orig_X.shape[0]
+        v = np.zeros(n)
+        s = np.zeros(n)
+
+        for i in range(n):
+            v[i] = np.abs(self.orig_X[i,:,:].var(axis = 0)).sum()
+            s[i] = np.abs(np.diff(self.orig_X[i,:,:], axis = 0)).sum()
             
-    def restrict_zero_labels(self, n):
+        self.variances = v
+        self.abs_diffs = s
+            
+            
+    def restrict_zero_labels(self, n, criterion = None):
         y = self.orig_y.copy()
         
         n0 = len(self.indices[0])
@@ -1031,15 +1042,25 @@ class DataResampler():
         elif n < 0:
             print("Target number of zero-labels was negative. Treated as zero!")
         else:
-            zero_idx = np.random.choice(self.indices[0], n, replace=False)
+            if criterion == 'abs_diff_lowest':
+                zero_idx = self.indices[0][np.argsort(self.abs_diffs[self.indices[0]])[0:n]]
+            elif criterion == 'abs_diff_highest':
+                zero_idx = self.indices[0][np.argsort(self.abs_diffs[self.indices[0]])[-n:]]
+            elif criterion == 'variances_lowest':
+                zero_idx = self.indices[0][np.argsort(self.variances[self.indices[0]])[0:n]]
+            elif criterion == 'variances_highest':
+                zero_idx = self.indices[0][np.argsort(self.variances[self.indices[0]])[-n:]]
+            else:
+                zero_idx = np.random.choice(self.indices[0], n, replace=False)
+            
             other_labels_idx = np.concatenate([self.indices[i] for i in self.indices.keys() if i != 0])
             new_idx = sorted(np.concatenate([zero_idx, other_labels_idx]))
             
         
-        print("New number of zero-labels:", n)
+        print("New number of zero-labels{0}:".format("" if criterion is None else " (selected with criterion=\"{0}\")".format(criterion)), n)
         
-        self.X = self.X[new_idx,:,:]
-        self.y = self.y[new_idx]
+        self.X = self.orig_X[new_idx,:,:]
+        self.y = self.orig_y[new_idx]
 
         return self.X, self.y 
     
