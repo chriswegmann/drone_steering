@@ -23,44 +23,47 @@ from sklearn.externals import joblib
 warnings.filterwarnings("ignore")
 
 # get model type
-print('')
-print("Which model type do you want to use? 1 = delta, 2 = posture, 3 = gesture")
-model_type_id = input()
-if int(model_type_id) == 1:
-    model_type = 'delta'
-if int(model_type_id) == 2:
-    model_type = 'posture'
-if int(model_type_id) == 3:
-    model_type = 'gesture'
-print('The "' + model_type + '" model will be used.')
+# print('')
+# print("Which model type do you want to use? 1 = delta, 2 = posture, 3 = gesture")
+# model_type_id = input()
+# if int(model_type_id) == 1:
+#     model_type = 'delta'
+# if int(model_type_id) == 2:
+#     model_type = 'posture'
+# if int(model_type_id) == 3:
+#     model_type = 'gesture'
+# print('The "' + model_type + '" model will be used.')
+model_type_id = 3
+model_type = 'gesture'
+
 
 # get interpolation yes / no
-if int(model_type_id) == 3:
-    print('')
-    print("Do you want to use interpolation? y = yes, n = no")
-    use_interpolation_id = input()
-    if str(use_interpolation_id)=='y':
-        use_interpolation = True
-        print('The PoseNet wireframes will be interpolated.')
-        interpolation = 'ip'
-    else:
-        use_interpolation = False
-        print('The PoseNet wireframes will not be interpolated.')
-        interpolation = 'nip'
-print('')
+# if int(model_type_id) == 3:
+#     print('')
+#     print("Do you want to use interpolation? y = yes, n = no")
+#     use_interpolation_id = input()
+#     if str(use_interpolation_id)=='y':
+#         use_interpolation = True
+#         print('The PoseNet wireframes will be interpolated.')
+#         interpolation = 'ip'
+#     else:
+#         use_interpolation = False
+#         print('The PoseNet wireframes will not be interpolated.')
+#         interpolation = 'nip'
+# print('')
+use_interpolation = False
+interpolation = 'nip'
+
 
 # get model instance
 if int(model_type_id) == 3:
     file_names = listdir('../models/')
-
 
     grp_model_type = '(?P<model_type>model_'+ model_type + '_[^_]+)'
     grp_ip = '(?P<ip_nip>' + interpolation + '\d*)'
     grp_model_params = '(?P<model_parameters>.+)'
     grp_suffix = '(?P<suffix>pkl|h5)'
     pattern = '(?P<file_name>' + grp_model_type + '_' + grp_ip + '_' + grp_model_params + '.' + grp_suffix + ')'
-
-
     reg = re.compile(pattern)
 
     matches = []
@@ -74,11 +77,9 @@ if int(model_type_id) == 3:
         group = match.groupdict()
         groups.append(group)
 
-
     models = []
     for grp in groups:
         models.append(grp["file_name"])
-
 
     print('Which model instance do you want to use?')
     for i in range(len(models)):
@@ -104,6 +105,7 @@ ms_per_frame_original = 120
 gesture_length = 2000
 ms_per_frame_interpolated = 50
 add_interpol_frames = 3
+debug_mode = False
 
 # connect to drone and set status flags
 drone_last_action = time.time()
@@ -190,7 +192,7 @@ async def consumer_handler(websocket, path):
                     steer_drone(predict_movement_model_gesture(pose_dict))
     except:
         print('Websocket connection terminated. Please re-connect.')
-        #raise
+        raise
 
 
 def steer_drone(movement):
@@ -436,6 +438,8 @@ def predict_movement_model_gesture(pose_dict):
     global pose_df
     global start_time
     global ms_since_start
+    global model_file_name
+    global debug_mode
     movement = 0
 
     steps = math.ceil(gesture_length/ms_per_frame_original) + 1
@@ -456,10 +460,14 @@ def predict_movement_model_gesture(pose_dict):
         if discarded_df.shape[0] > add_interpol_frames:
             pose_ip_df = interpolate(pose_df, ms_per_frame_interpolated)
 
-            file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
-            pose_ip_df.to_csv('model_inputs/' + file_name,  index=False)
+            if debug_mode:
+                file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
+                pose_ip_df.to_csv('model_inputs/' + file_name,  index=False)
 
-            pose_np = pose_ip_df.drop(['ms_since_start'], axis=1).values.reshape(1, steps_ip, -1)
+            if model_file_name.endswith('pkl'):
+                pose_np = pose_ip_df.drop(['ms_since_start'], axis=1).values.reshape(steps_ip, -1)
+            elif model_file_name.endswith('h5'):
+                pose_np = pose_ip_df.drop(['ms_since_start'], axis=1).values.reshape(1, steps_ip, -1)
             pose_np = processing_pipeline.fit_transform(pose_np)
             movement = np.argmax(model.predict(pose_np)[0])
     else:
@@ -468,11 +476,14 @@ def predict_movement_model_gesture(pose_dict):
             pose_df = pose_df.iloc[1:]
 
         if len(pose_df) == steps:
-            file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
-            pose_df.to_csv('model_inputs/' + file_name,  index=False)
+            if debug_mode:
+                file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
+                pose_df.to_csv('model_inputs/' + file_name,  index=False)
 
             pose_np = pose_df.values.reshape(1, steps, len(cols))
             pose_np = processing_pipeline.fit_transform(pose_np)
+            if model_file_name.endswith('pkl'):
+                pose_np = pose_np.reshape(1, -1)
             movement = np.argmax(model.predict(pose_np)[0])
 
     return movement
