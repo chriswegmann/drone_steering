@@ -59,11 +59,12 @@ interpolation = 'nip'
 if int(model_type_id) == 3:
     file_names = listdir('../models/')
 
-    grp_model_type = '(?P<model_type>model_'+ model_type + '_[^_]+)'
+    grp_model_type = '(?P<model_type>model_'+ model_type + ')'
+    grp_estimator = '(?P<estimator>[^_]+)'
     grp_ip = '(?P<ip_nip>' + interpolation + '\d*)'
     grp_model_params = '(?P<model_parameters>.+)'
     grp_suffix = '(?P<suffix>pkl|h5)'
-    pattern = '(?P<file_name>' + grp_model_type + '_' + grp_ip + '_' + grp_model_params + '.' + grp_suffix + ')'
+    pattern = '(?P<file_name>' + grp_model_type + '_' + grp_estimator + '_' + grp_ip + '_' + grp_model_params + '.' + grp_suffix + ')'
     reg = re.compile(pattern)
 
     matches = []
@@ -81,11 +82,17 @@ if int(model_type_id) == 3:
     for grp in groups:
         models.append(grp["file_name"])
 
+    estimators = []
+    for grp in groups:
+        estimators.append(grp["estimator"])
+
     print('Which model instance do you want to use?')
     for i in range(len(models)):
         print(str(i) + ' | ' + models[i])
     model_instance = input()
     print('')
+
+    estimator = estimators[int(model_instance)]
 
 
 # decide if drone or virtual flight is used
@@ -438,8 +445,9 @@ def predict_movement_model_gesture(pose_dict):
     global pose_df
     global start_time
     global ms_since_start
-    global model_file_name
+    global estimator
     global debug_mode
+    global use_interpolation
     movement = 0
 
     steps = math.ceil(gesture_length/ms_per_frame_original) + 1
@@ -459,32 +467,36 @@ def predict_movement_model_gesture(pose_dict):
 
         if discarded_df.shape[0] > add_interpol_frames:
             pose_ip_df = interpolate(pose_df, ms_per_frame_interpolated)
-
             if debug_mode:
                 file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
                 pose_ip_df.to_csv('model_inputs/' + file_name,  index=False)
-
             if model_file_name.endswith('pkl'):
                 pose_np = pose_ip_df.drop(['ms_since_start'], axis=1).values.reshape(steps_ip, -1)
             elif model_file_name.endswith('h5'):
                 pose_np = pose_ip_df.drop(['ms_since_start'], axis=1).values.reshape(1, steps_ip, -1)
             pose_np = processing_pipeline.fit_transform(pose_np)
-            movement = np.argmax(model.predict(pose_np)[0])
+            if estimator in ['svm', 'rf']:
+                pose_np = pose_np.reshape(1, -1)
+            if estimator == 'svm':
+                movement = model.predict(pose_np)[0]
+            else:
+                movement = np.argmax(model.predict(pose_np)[0])
     else:
         pose_df = pose_df.append(pd.DataFrame(pose_dict, index=[0]))
         if len(pose_df) > steps:
             pose_df = pose_df.iloc[1:]
-
         if len(pose_df) == steps:
             if debug_mode:
                 file_name = 'model_input_' + datetime.now().strftime('%Y%m%d_%H%M%S%f') + '.csv'
                 pose_df.to_csv('model_inputs/' + file_name,  index=False)
-
             pose_np = pose_df.values.reshape(1, steps, len(cols))
             pose_np = processing_pipeline.fit_transform(pose_np)
-            if model_file_name.endswith('pkl'):
+            if estimator in ['svm', 'rf']:
                 pose_np = pose_np.reshape(1, -1)
-            movement = np.argmax(model.predict(pose_np)[0])
+            if estimator == 'svm':
+                movement = model.predict(pose_np)[0]
+            else:
+                movement = np.argmax(model.predict(pose_np)[0])
 
     return movement
 
