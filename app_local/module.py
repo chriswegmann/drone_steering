@@ -1066,7 +1066,13 @@ class DataResampler():
     
     
     def upsample(self, n = None, exceptions = None):
-        if n is None:
+        isdict = False
+        
+        if isinstance(n,dict):
+            isdict = True
+            if not set(n.keys()).issubset(set(self.labels)):
+                raise ValueError("Keys of provided dict have to be a subset of labels: {0}".format(self.labels))
+        elif n is None:
             n = len(self.indices[0])
         elif n < 0:
             n = 0
@@ -1079,26 +1085,40 @@ class DataResampler():
             exceptions = []
             
         for i in self.indices.keys():
+            if not isdict:
+                k = int(n)
+            elif i in n.keys():
+                k = int(n[i])
+            else:
+                k = 0
+                
+                
             if i in exceptions:
                 a[i] = len(self.indices[i])
                 b[i] = 0
             else:
-                a[i] = min(n, len(self.indices[i]))
-                diff = n - len(self.indices[i])
+                a[i] = min(k, len(self.indices[i]))
+                diff = k - len(self.indices[i])
                 b[i] = max(0, diff)
             
             idx_a = np.random.choice(self.indices[i], a[i], replace = False)
             idx_b = np.random.choice(self.indices[i], b[i], replace = True)
+        
             
             idx[i] = sorted(np.concatenate([idx_a, idx_b]))
-            
         
+            
         upsampled_idx = sorted(np.concatenate([idx[i] for i in idx]))
+        upsampled_idx = [int(idx) for idx in upsampled_idx]
+        
         
         self.X = self.orig_X[upsampled_idx,:,:]
         self.y = self.orig_y[upsampled_idx]
-        
+            
         return self.X, self.y  
+
+
+
     
     def display_information(self):
         df = pd.DataFrame(columns=["abs_orig","pct_orig","abs_current","pct_current"],index = self.labels)
