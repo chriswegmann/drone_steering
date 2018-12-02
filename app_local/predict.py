@@ -199,7 +199,7 @@ async def consumer_handler(websocket, path):
                     steer_drone(predict_movement_model_gesture(pose_dict))
     except:
         print('Websocket connection terminated. Please re-connect.')
-        raise
+        # raise
 
 
 def steer_drone(movement):
@@ -228,44 +228,39 @@ def drone_takeoff():
     global drone_status
     drone_status = 'flying'
     show_movement(1)
-    # print('Take-off | drone.takeoff() | Ready to take flight commands in five seconds.')
+    print('Ready to take flight commands in five seconds.')
     if not virtual_flight:
         drone.takeoff()
 
 
 def drone_move():
     show_movement(2)
-    # print('Move     | drone.move_forward(2)')
     if not virtual_flight:
         drone.move_forward(2)
 
 
 def drone_flip():
     show_movement(3)
-    # print("Flip     | drone.flip('r')")
     if not virtual_flight:
         drone.flip('r')
 
 
 def drone_left():
     show_movement(4)
-    # print('Left     | drone.rotate_ccw(90)')
     if not virtual_flight:
-        drone.rotate_ccw(90)
+        drone.rotate_ccw(70)
 
 
 def drone_right():
     show_movement(5)
-    # print('Right    | drone.rotate_cw(90)')
     if not virtual_flight:
-        drone.rotate_cw(90)
+        drone.rotate_cw(70)
 
 
 def drone_land():
     global drone_status
     drone_status = 'grounded'
     show_movement(6)
-    # print('Land     | drone.land()')
     if not virtual_flight:
         drone.land()
 
