@@ -1,90 +1,61 @@
 ## Drone Steering Using Gestures
 
-We use the PoseNet model as the basis to steer a drone using postures and gestures recorded by a webcam. To support this, we will train a Long Short-Term Memory neural network on top of the PoseNet model. This will involve streaming input data and detecting the patterns to come up with the classification (e.g. take-off, move forward, flip or land) and a steering module to transmit signals to a drone. This is as much an engineering problem as it is a machine learning problem. We build and connect three modules to achieve our goal:
+This project enables the user to steer a drone with gestures recorded live by a webcam. We accomplished this by training a Long Short-Term Memory neural network on top of Google’s PoseNet model. The project comprises not only the trained model, but also a working and fully integrated system from webcam to drone.
 
-![Model architecture](images/architecture_local.png)
+We will first introduce the system and the supported gestures - you find the installation instructions and an explanation of the folder structure at the bottom.
 
-Let us look at the above modules a bit more in detail:
-* The PoseNet model runs on a local node.js server. The user records video using the browser which connects to the server. The server then broadcasts the wireframe (i.e. the x/y coordinates of various body parts) via web socket.
-* The web socket server runs in Python and receives the broadcasted wireframe data. Upon receiving, the server feeds the wireframe into a gesture detection model. This model translates the x/y coordinates (and patterns within these) into commands that can be understood by the drone.
-* The Steering Module picks up the movements and translates them into the commands as required by the drone’s API.
+### System Overview
 
-We use pre-recorded videos with labels to generate training data. We then build and train the model in Python using Keras. Once trained, we embed this model in a JavaScript application.
+This project is as much an engineering problem as it is a machine learning problem. We built and connected three modules to achieve our goal:
 
-### Installation / Start
-You need to install _PoseNet for Installations_, available [here](https://github.com/oveddan/posenet-for-installations). You need to clone it to your local drive (and install _node.js_ and _yarn_ in case you don't have them yet).
+![System architecture](docs/images/system_architecture.png)
 
-Once installed, follow these steps:
-* Go to the folder where you have have installed PoseNet and run ```yarn start```. This will start a node.js server (by default on port 3000) and open your browser pointed to this server.
-* Run the ```app_local/websocket_predict.py``` of this repo - this will set up a websocket server, by default on port 8080.
-* Once the websocket server is running, switch back to the PoseNet website and connect to the websocket server (with the _cast_ icon) and then start the webcam and pose detection (with the other two icons).
-* Voilà, you should see the model detecting your postures / gestures in the shell.
+* The PoseNet model extracts so-called wireframes, i.e. x/y coordinates of human body parts like elbow or wrist from a video stream. We run PoseNet on a local node.js server. The user plays the video stream using the browser which connects to the server. The server then broadcasts a stream of wireframes via web socket.
+* The Gesture Detection module is a web socket server running in Python. It receives the broadcasted wireframes from PoseNet. Upon receiving, the server feeds the wireframe into a gesture detection model. This model translates the wireframes and patterns within these into commands that can be understood by the drone (e.g. ‘take-off’ or ‘left’).
+* The Steering Module picks up the movement stream and translates it into the commands required by the drone’s API. It uses multi-threading to cope with long execution times while the drone is finishing a command.
 
-### Project Planning
-In order to reduce delivery risk we divide our project in four stages and gradually add functionality (and thus complexity):
+### Gestures
 
-![Project evolution](images/project_evolution.png)
+The model currently supports six gestures: take-off, land, move, left, right and flip. The chart below shows the gesture definitions. For example, the take-off gesture is performed by raising both your hands from a start position beside the hips in a circular movement to an end position above your head.
 
-* In a first stage we get the PoseNet model running in a JavaScript application and calculate simple postures directly from the x/y coordinates. We display the inferred movements on the application.
-* The second stage includes a Keras model embedded in the application. This model detects static postures (but no gestures yet - see next section for a discussion of postures vs. gestures). We train this model using webcam data enriched with manually added labels.
-* In the third stage we add a more complex gesture detection model; we also add a module to actually steer the drone instead of just showing the direction in the application.
-* The fourth and last stage is the highlight - we now use the video feed from the drone camera instead of the webcam. This brings additional complexity as we need to ensure a proper angle of the camera and the signal is less stable.
+![System architecture](docs/images/gestures.png)
 
-We are currently in the second stage, with the model already being embedded but not yet trained. In parallel we work on the third stage.
+Technically speaking, a gesture is a sequence of wireframes as shown in the figure below. We assumed an average framerate of 120ms and a gesture duration of two seconds, giving us around 17 wireframes representing a gesture.
 
-### Postures vs. Gestures
-**Postures:** A posture is one single static position. It is thus possible to derive the movement from a single picture. Modelling this is straight-forward as we can train the model with lots of individual position data. Once trained, the model predicts a movement from a given position.
-![Posture model](https://drone-steering.azurewebsites.net/images/posture_model.png)
-**Gestures:** A gesture is a sequence of interconnected positions, e.g. a circle movement done with the hand. This allows for more complex movements. Compared to the posture model the gesture model now needs a group of positions including their sequence as input.
+![Gesture in time](docs/images/gesture_in_time.png)
 
-![Gesture model](images/gesture_model.png)
+We recorded about 45 minutes of video and labelled them appropriately. Sequences that show no or only partial gestures were labelled as 0 (= ‘no gesture’). 
 
-We are currently evaluating the best approach for a gesture model. For simplicity we assume a maximum duration of two seconds for a gesture, with time steps of 0.05 seconds. Our initial idea is that the model input for a given point in time is an ordered set of 40 positions covering the last two seconds. The subsequent input would again be a set of 40 positions, with the oldest dropped and a new position added as the first. We thus outsource the 'remembering across time' from the model to the part of the application where data is generated. Schematically, this looks as follows (with the gray positions being the ones sent together as an input):
-
-![Gesture model](images/gesture_model_data.png)
-
-Alternatives appear to be Hidden Markov Models (HMM), Long Short-Term Memory Models (LSTM) or a hybrid of HMM and Convolutional Neural Networks (CNN) or Recurrent Neural Networks (RNN). From a superficial reading all these support time-dependent pattern (and thus gesture) recognition.
-
-### Supported Postures
-In stage 1 and stage 2 we support the following postures:
-![Supported postures](images/postures.png)
-Postures are currently working when calculated as simple deltas. For the posture model we have achieved an accuracy of >90%.
+Subsequently, we pre-processed the data and used it as input to a classification model. You can find more details to both topics in the slide deck in the ‘docs’ folder.
 
 
-### Supported Gestures
-We plan to support the following six gestures:
+### Installation
+Prerequisites:
+*	Clone this repo to your local drive. 
+*	Install PoseNet for Installations, available here. You need to clone it as well to your local drive (and install node.js and yarn in case you don't have them yet).
+*	Optional: get a Tello drone (it’s about 90$ on Amazon).
 
-<html>
- <table>
-  <tr>
-   <td><img src="images/gesture_take_off.png"></td>
-   <td><img src="images/gesture_left.png"></td>
-  </tr>
-  <tr>
-   <td style="background-color: #FFFFFF;"><img src="images/gesture_land_grey.png"></td>
-   <td style="background-color: #FFFFFF;"><img src="images/gesture_right_grey.png"></td>
-  </tr>
-  <tr>
-   <td><img src="images/gesture_move.png"></td>
-   <td><img src="images/gesture_looping.png"></td>
-  </tr>
- </table>
-</html>  
-  
-Gestures are currently work in progress. Once a working version is available, we will make it accessible in the same way as the current posture model.
+Once installed, follow these steps to start up the system:
 
-### References
-* https://arxiv.org/pdf/1506.01911.pdf
-* https://www.sciencedirect.com/science/article/pii/S1877750317312632
-* https://arxiv.org/pdf/1707.03692.pdf
-* https://arxiv.org/pdf/1802.09901.pdf
-* https://arxiv.org/pdf/1712.10136.pdf
-* https://github.com/udacity/CVND---Gesture-Recognition
-* https://github.com/hthuwal/sign-language-gesture-recognition
+*	Go to the folder where you have installed PoseNet and run ```yarn start```. This will start a node.js server (by default on port 3000) and open your browser pointed to this server.
+*	Run the ```app/predict.py``` of this repo. The script will ask you if you want to take a virtual flight or use a real drone. If you chose a virtual flight you will see the movement commands only on your screen. The script will then start a web socket server on port 8080.
+*	Once the web socket server is running, switch back to the PoseNet website and connect to the web socket server (with the cast icon) and then start the webcam and pose detection (with the other two icons).
+*	Perform the gesture for take-off in front of the webcam – et voilà, you should see a message that your drone has taken off (and the drone takes off, in case you actually have one).
 
-### Todos
-* [Christian] Implement steering module
-* [Christian] Integrate all three modules into one system
-* [All] Generate training data for posture model
-* [All] Generate training data for gesture model
-* [Pascal and Laleh] Implement and train the gesture model
+
+### Folder Structure
+
+If you want to dive more into the repo you might find the following folder summary helpful:
+*	```app```: various scripts and modules (e.g. prediction, training data generation, data pre-processing or drone API)
+*	```data```: labelled data collected in our project
+*	```docs```: additional documentation. The most interesting is the PDF slide deck explaining more about the data pre-processing and classification models.
+*	```models```: trained models. Here you’ll find two main models – a gesture and a posture model (see above PDF for more details about postures) and a lot of alternative models. You also find a couple of informative notebooks with executed examples of the classes developed in the project.
+
+
+### Questions
+
+You have more questions or want to develop this further? We would love to hear from you! You can reach us easiest via mail:
+
+*	Christian (christian_wegmann@gmx.net)
+*	Pascal (paroscha@gmail.com)
+*	Laleh (laleh8@gmail.com)
