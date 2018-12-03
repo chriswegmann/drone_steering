@@ -22,77 +22,94 @@ from sklearn.externals import joblib
 
 warnings.filterwarnings("ignore")
 
+# set static parameters
+show_current_framelength = False
+ms_per_frame_original = 120
+gesture_length = 2000
+ms_per_frame_interpolated = 50
+add_interpol_frames = 3
+debug_mode = False
+
 # get model type
-# print('')
-# print("Which model type do you want to use? 1 = delta, 2 = posture, 3 = gesture")
-# model_type_id = input()
-# if int(model_type_id) == 1:
-#     model_type = 'delta'
-# if int(model_type_id) == 2:
-#     model_type = 'posture'
-# if int(model_type_id) == 3:
-#     model_type = 'gesture'
-# print('The "' + model_type + '" model will be used.')
-model_type_id = 3
-model_type = 'gesture'
+if debug_mode:
+    print('')
+    print("Which model type do you want to use? 1 = delta, 2 = posture, 3 = gesture")
+    model_type_id = input()
+    if int(model_type_id) == 1:
+        model_type = 'delta'
+    if int(model_type_id) == 2:
+        model_type = 'posture'
+    if int(model_type_id) == 3:
+        model_type = 'gesture'
+    print('The "' + model_type + '" model will be used.')
+else:
+    model_type_id = 3
+    model_type = 'gesture'
 
 
 # get interpolation yes / no
-# if int(model_type_id) == 3:
-#     print('')
-#     print("Do you want to use interpolation? y = yes, n = no")
-#     use_interpolation_id = input()
-#     if str(use_interpolation_id)=='y':
-#         use_interpolation = True
-#         print('The PoseNet wireframes will be interpolated.')
-#         interpolation = 'ip'
-#     else:
-#         use_interpolation = False
-#         print('The PoseNet wireframes will not be interpolated.')
-#         interpolation = 'nip'
-# print('')
-use_interpolation = False
-interpolation = 'nip'
+if debug_mode:
+    if int(model_type_id) == 3:
+        print('')
+        print("Do you want to use interpolation? y = yes, n = no")
+        use_interpolation_id = input()
+        if str(use_interpolation_id)=='y':
+            use_interpolation = True
+            print('The PoseNet wireframes will be interpolated.')
+            interpolation = 'ip'
+        else:
+            use_interpolation = False
+            print('The PoseNet wireframes will not be interpolated.')
+            interpolation = 'nip'
+    print('')
+else:
+    use_interpolation = False
+    interpolation = 'nip'
 
 
 # get model instance
-if int(model_type_id) == 3:
-    file_names = listdir('../models/')
+if debug_mode:
+    if int(model_type_id) == 3:
+        file_names = listdir('../models/alternative_models')
 
-    grp_model_type = '(?P<model_type>model_'+ model_type + ')'
-    grp_estimator = '(?P<estimator>[^_]+)'
-    grp_ip = '(?P<ip_nip>' + interpolation + '\d*)'
-    grp_model_params = '(?P<model_parameters>.+)'
-    grp_suffix = '(?P<suffix>pkl|h5)'
-    pattern = '(?P<file_name>' + grp_model_type + '_' + grp_estimator + '_' + grp_ip + '_' + grp_model_params + '.' + grp_suffix + ')'
-    reg = re.compile(pattern)
+        grp_model_type = '(?P<model_type>model_'+ model_type + ')'
+        grp_estimator = '(?P<estimator>[^_]+)'
+        grp_ip = '(?P<ip_nip>' + interpolation + '\d*)'
+        grp_model_params = '(?P<model_parameters>.+)'
+        grp_suffix = '(?P<suffix>pkl|h5)'
+        pattern = '(?P<file_name>' + grp_model_type + '_' + grp_estimator + '_' + grp_ip + '_' + grp_model_params + '.' + grp_suffix + ')'
+        reg = re.compile(pattern)
 
-    matches = []
-    for file_name in file_names:
-        match = reg.search(file_name)
-        if match:
-            matches.append(match)
+        matches = []
+        for file_name in file_names:
+            match = reg.search(file_name)
+            if match:
+                matches.append(match)
 
-    groups = []
-    for i, match in enumerate(matches):
-        group = match.groupdict()
-        groups.append(group)
+        groups = []
+        for i, match in enumerate(matches):
+            group = match.groupdict()
+            groups.append(group)
 
-    models = []
-    for grp in groups:
-        models.append(grp["file_name"])
+        models = []
+        for grp in groups:
+            models.append(grp["file_name"])
 
-    estimators = []
-    for grp in groups:
-        estimators.append(grp["estimator"])
+        estimators = []
+        for grp in groups:
+            estimators.append(grp["estimator"])
 
-    print('Which model instance do you want to use?')
-    for i in range(len(models)):
-        print(str(i) + ' | ' + models[i])
-    model_instance = input()
-    print('')
+        print('Which model instance do you want to use?')
+        for i in range(len(models)):
+            print(str(i) + ' | ' + models[i])
+        model_instance = input()
+        print('')
 
-    estimator = estimators[int(model_instance)]
+        estimator = estimators[int(model_instance)]
+        model_file_name = 'alternative_models/' + models[int(model_instance)]
+else:
+    estimator = 'lstm'
+    model_file_name = 'model_gesture.h5'
 
 
 # decide if drone or virtual flight is used
@@ -106,13 +123,6 @@ else:
     print('You will see the flight commands printed on the screen.')
 print('')
 
-# set static parameters
-show_current_framelength = False
-ms_per_frame_original = 120
-gesture_length = 2000
-ms_per_frame_interpolated = 50
-add_interpol_frames = 3
-debug_mode = False
 
 # connect to drone and set status flags
 drone_last_action = time.time()
@@ -153,7 +163,6 @@ if (model_type == 'gesture'):
               'rightElbow_x']
     cols_y = [col.replace('x', 'y') for col in cols_x]
     
-    model_file_name = models[int(model_instance)]
     if model_file_name.endswith('pkl'):
         model = joblib.load('../models/' + model_file_name) 
     elif model_file_name.endswith('h5'):
