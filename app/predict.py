@@ -28,10 +28,11 @@ ms_per_frame_original = 120
 gesture_length = 2000
 ms_per_frame_interpolated = 50
 add_interpol_frames = 3
+allow_model_selection = False
 debug_mode = False
 
 # get model type
-if debug_mode:
+if allow_model_selection:
     print('')
     print("Which model type do you want to use? 1 = delta, 2 = posture, 3 = gesture")
     model_type_id = input()
@@ -48,7 +49,7 @@ else:
 
 
 # get interpolation yes / no
-if debug_mode:
+if allow_model_selection:
     if int(model_type_id) == 3:
         print('')
         print("Do you want to use interpolation? y = yes, n = no")
@@ -68,7 +69,7 @@ else:
 
 
 # get model instance
-if debug_mode:
+if allow_model_selection:
     if int(model_type_id) == 3:
         file_names = listdir('../models/alternative_models')
 
@@ -208,7 +209,7 @@ async def consumer_handler(websocket, path):
                     steer_drone(predict_movement_model_gesture(pose_dict))
     except:
         print('Websocket connection terminated. Please re-connect.')
-        # raise
+        raise
 
 
 def steer_drone(movement):
