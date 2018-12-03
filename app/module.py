@@ -1150,7 +1150,8 @@ class DataResampler():
     
     
     def train_test_split(self, fraction):
-        
+        fraction = 0.0 if fraction < 0 else 1.0 if fraction > 1.0 else fraction
+
         remove_idx = {}
         keep_idx = {}
         for l in self.labels:
@@ -1165,6 +1166,9 @@ class DataResampler():
         remove = np.random.permutation(remove)
         keep = np.random.permutation(keep)
         
+        remove = [int(x) for x in remove]
+        keep = [int(x) for x in keep]
+
         self.X = self.orig_X[keep,:,:]
         self.y = self.orig_y[keep]
         
