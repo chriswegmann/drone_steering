@@ -48,7 +48,7 @@ Once installed, follow these steps to start up the system:
 If you want to dive more into the repo you might find the following folder summary helpful:
 *	```app```: various scripts and modules (e.g. prediction, training data generation, data pre-processing or drone API)
 *	```data```: labelled data collected in our project
-*	```docs```: additional documentation. The most interesting is the PDF slide deck explaining more about the data pre-processing and classification models.
+*	```docs```: additional documentation. The most interesting is the PDF slide deck [here](docs/documentation_drone_steering.pdf) explaining more about the data pre-processing and classification models.
 *	```models```: trained models. Here you’ll find two main models – a gesture and a posture model (see above PDF for more details about postures) and a lot of alternative models. You also find a couple of informative notebooks with executed examples of the classes developed in the project.
 
 
