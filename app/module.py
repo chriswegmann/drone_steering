@@ -7,6 +7,19 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from scipy.interpolate import interp1d
 import math
 
+class Shuffler(BaseEstimator, TransformerMixin):
+    
+    def __init__(self):
+        pass
+        
+    def fit(self, x, y = None):
+        return self
+    
+    def transform(self, x): #x is df
+        x=x.loc[np.random.permutation(x.index)]
+        
+        return x
+
 
 class XCentralizer(BaseEstimator, TransformerMixin):
 
