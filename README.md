@@ -24,9 +24,7 @@ Technically speaking, a gesture is a sequence of wireframes as shown in the figu
 
 ![Gesture in time](docs/images/gesture_in_time.png)
 
-We recorded about 45 minutes of video and labelled them appropriately. Sequences that show no or only partial gestures were labelled as 0 (= ‘no gesture’). 
-
-Subsequently, we pre-processed the data and used it as input to a classification model. You can find more details to both topics in the slide deck in the ‘docs’ folder.
+We recorded about 45 minutes of video and labelled them appropriately. Sequences that show no or only partial gestures were labelled as 0 (= ‘no gesture’). Subsequently, we pre-processed the data and used it as input to a classification model. You can find more details to both topics in this [slide deck](docs/documentation_drone_steering.pdf).
 
 
 ### Installation
