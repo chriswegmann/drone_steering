@@ -1,0 +1,27 @@
+
+table, td, th {
+  font-family: 'Lato', sans-serif;
+}
+
+select {
+  appearance: none;
+  border:none;
+  border-radius: 0;
+  font-size: 1em;
+  width: 100%
+} 
+
+select {
+  width:150px;
+  border: 1px solid #bbb;
+  padding:.25em 0.25em .25em 1em;
+  background-color:white;
+  background-position: right;
+  background-repeat: no-repeat;
+}
+
+select:hover {
+  box-shadow: 0 1px 1px 0 rgba(0,0,0,0.1);
+}
+
+

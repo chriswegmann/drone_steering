@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta content="stuff, to, help, search, engines, not" name="keywords" />
+    <meta content="What this page is about." name="description" />
+    <meta content="Display Webcam Stream" name="title" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Capturing coordinates with PoseNet</title>
+
+    <script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+    <script src="https://d3js.org/d3-fetch.v1.min.js"></script>
+    <script src="https://unpkg.com/@tensorflow/tfjs"></script>
+    <script src="https://unpkg.com/@tensorflow-models/posenet"></script>
+    <script src="data_grabbing.js"></script>
+
+    <link
+      href="https://fonts.googleapis.com/css?family=Bai+Jamjuree"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+
+    <style>
+      #video {
+        width: 640px;
+        height: 444px;
+        background-color: #666;
+      }
+    </style>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+  </head>
+
+  <body>
+    <br />
+
+    <table width="100%">
+      <tr valign="middle">
+        <td width="10%"></td>
+        <td width="80%">
+          <table width="100%" style="border-spacing: 0px;">
+            <tr>
+              <td width="10" style="border-bottom: 1px solid #ddd;"></td>
+              <td
+                style="border: 1px solid #ddd; text-align: center; background-color: #f2f2f2;"
+                width="180px"
+                height="30px"
+                valign="middle"
+              >
+                <a
+                  href="train_model.html"
+                  style="text-decoration: none; color: #000000;"
+                  ><span style="font-family: 'Bai+Jamjuree', sans-serif;"
+                    >Generate Training Data</span
+                  ></a
+                ><br />
+              </td>
+              <td width="10" style="border-bottom: 1px solid #ddd;"></td>
+              <td
+                style="border-top: 1px solid #ddd; border-left: 1px solid #ddd; border-right: 1px solid #ddd; text-align: center;"
+                width="150px"
+                height="30px"
+                valign="middle"
+              >
+                <span style="font-family: 'Bai+Jamjuree', sans-serif;"
+                  >Predict Movements</span
+                ><br />
+              </td>
+              <td style="border-bottom: 1px solid #ddd;"></td>
+            </tr>
+          </table>
+
+          <br /><br />
+
+          <table width="100%" style="border-spacing: 0px;">
+            <tr>
+              <td width="10" style="border-bottom: 1px solid #ddd;"></td>
+              <td
+                style="border-top: 1px solid #ddd; border-left: 1px solid #ddd; border-right: 1px solid #ddd; text-align: center;"
+                width="100px"
+                height="23px"
+                valign="middle"
+              >
+                <span
+                  style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 11pt;"
+                  >Deltas</span
+                ><br />
+              </td>
+              <td width="10" style="border-bottom: 1px solid #ddd;"></td>
+              <td
+                style="border: 1px solid #ddd; text-align: center; background-color: #f2f2f2;"
+                width="100px"
+                valign="middle"
+              >
+                <a
+                  href="predict_postures.html"
+                  style="text-decoration: none; color: #000000;"
+                  ><span
+                    style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 11pt;"
+                    >Postures</span
+                  ></a
+                ><br />
+              </td>
+              <td width="10" style="border-bottom: 1px solid #ddd;"></td>
+              <td
+                style="border: 1px solid #ddd; text-align: center; background-color: #f2f2f2;"
+                width="100px"
+                valign="middle"
+              >
+                <a
+                  href="predict_gestures.html"
+                  style="text-decoration: none; color: #000000;"
+                  ><span
+                    style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 11pt;"
+                    >Gestures</span
+                  ></a
+                ><br />
+              </td>
+              <td style="border-bottom: 1px solid #ddd;"></td>
+            </tr>
+          </table>
+
+          <br />
+
+          <table width="100%">
+            <tr>
+              <td colspan="2" style="border-bottom: 1px solid #ddd;">
+                <span style="font-family: 'Bai+Jamjuree', sans-serif;"
+                  >How to use?</span
+                ><br />
+              </td>
+            </tr>
+            <tr>
+              <td valign="center" style="border-bottom: 1px solid #ddd;">
+                Move to a position where your webcam can see you in full size.
+                Then move your arms as shown in the pictures on the right. The
+                webcam will then automatically detect which movement you are
+                doing.
+              </td>
+              <td align="center" style="border-bottom: 1px solid #ddd;">
+                <img src="../images/summary.png" />
+              </td>
+            </tr>
+          </table>
+
+          <table>
+            <tr valign="top">
+              <td>
+                <br />
+                <div id="main">
+                  <video
+                    id="video"
+                    playsinline=""
+                    style=" -moz-transform: scaleX(-1); -o-transform: scaleX(-1); -webkit-transform: scaleX(-1); transform: scaleX(-1);"
+                  ></video>
+                  <canvas id="output"></canvas>
+                </div>
+                <button
+                  style="font-family: 'Bai+Jamjuree', sans-serif; font-size: 12pt;"
+                  onClick="getCoordinatesWebcam('deltas')"
+                >
+                  Start Webcam
+                </button>
+              </td>
+              <td width="50px"></td>
+
+              <td width="400px">
+                <table width="100%">
+                  <tr>
+                    <td align="center">
+                      <img id="label_display" src="../images/stop.png" />
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+
+          <table width="100%">
+            <tr>
+              <td
+                style="border-bottom: 1px solid #ddd; border-top: 1px solid #ddd;"
+              >
+                <span style="font-family: 'Bai+Jamjuree', sans-serif;"
+                  >Debugging</span
+                ><br />
+              </td>
+            </tr>
+          </table>
+
+          <table>
+            <tr valign="top">
+              <td>
+                <table style="border: none;">
+                  <tr>
+                    <td></td>
+                    <td align="center" width="180px">X</td>
+                    <td align="center" width="180px">Y</td>
+                  </tr>
+                  <!--
+                    <tr style="background-color: #f2f2f2;"><td>nose</td><td><span id="nose_x"></span></td><td><span id="nose_y"></span></td></tr>
+
+                    <tr><td>leftEye</td><td><span id="leftEye_x"></span></td><td><span id="leftEye_y"></span></td></tr>
+
+
+                    <tr style="background-color: #f2f2f2;"><td>rightEye</td><td><span id="rightEye_x"></span></td><td><span id="rightEye_y"></span></td></tr>
+
+
+                    <tr><td>leftEar</td><td><span id="leftEar_x"></span></td><td><span id="leftEar_y"></span></td></tr>
+
+
+                    <tr style="background-color: #f2f2f2;"><td>rightEar</td><td><span id="rightEar_x"></span></td><td><span id="rightEar_y"></span></td></tr>
+                  -->
+                  <tr style="background-color: #f2f2f2;">
+                    <td>leftShoulder</td>
+                    <td><span id="leftShoulder_x"></span></td>
+                    <td><span id="leftShoulder_y"></span></td>
+                  </tr>
+                  <tr>
+                    <td>rightShoulder</td>
+                    <td><span id="rightShoulder_x"></span></td>
+                    <td><span id="rightShoulder_y"></span></td>
+                  </tr>
+                  <tr style="background-color: #f2f2f2;">
+                    <td>leftElbow</td>
+                    <td><span id="leftElbow_x"></span></td>
+                    <td><span id="leftElbow_y"></span></td>
+                  </tr>
+                  <tr>
+                    <td>rightElbow</td>
+                    <td><span id="rightElbow_x"></span></td>
+                    <td><span id="rightElbow_y"></span></td>
+                  </tr>
+                  <tr style="background-color: #f2f2f2;">
+                    <td>leftWrist</td>
+                    <td><span id="leftWrist_x"></span></td>
+                    <td><span id="leftWrist_y"></span></td>
+                  </tr>
+                  <tr>
+                    <td>rightWrist</td>
+                    <td><span id="rightWrist_x"></span></td>
+                    <td><span id="rightWrist_y"></span></td>
+                  </tr>
+                  <!--
+                    <tr><td>leftHip</td><td><span id="leftHip_x"></span></td><td><span id="leftHip_y"></span></td></tr>
+
+                    <tr style="background-color: #f2f2f2;"><td>rightHip</td><td><span id="rightHip_x"></span></td><td><span id="rightHip_y"></span></td></tr>
+
+
+                    <tr><td>leftKnee</td><td><span id="leftKnee_x"></span></td><td><span id="leftKnee_y"></span></td></tr>
+
+
+                    <tr style="background-color: #f2f2f2;"><td>rightKnee</td><td><span id="rightKnee_x"></span></td><td><span id="rightKnee_y"></span></td></tr>
+
+
+                    <tr><td>leftAnkle</td><td><span id="leftAnkle_x"></span></td><td><span id="leftAnkle_y"></span></td></tr>
+
+
+                    <tr style="background-color: #f2f2f2;"><td>rightAnkle</td><td><span id="rightAnkle_x"></span></td><td><span id="rightAnkle_y"></span></td></tr>
+                  -->
+                </table>
+              </td>
+              <td width="50px"></td>
+              <td>
+                <table style="border: none;">
+                  <tr>
+                    <td></td>
+                    <td align="center" width="180px">Deltas</td>
+                  </tr>
+                  <tr style="background-color: #f2f2f2;">
+                    <td>leftArm_x</td>
+                    <td><span id="leftArm_x"></span></td>
+                  </tr>
+                  <tr>
+                    <td>leftArm_y</td>
+                    <td><span id="leftArm_y"></span></td>
+                  </tr>
+                  <tr style="background-color: #f2f2f2;">
+                    <td>rightArm_x</td>
+                    <td><span id="rightArm_x"></span></td>
+                  </tr>
+                  <tr>
+                    <td>rightArm_y</td>
+                    <td><span id="rightArm_y"></span></td>
+                  </tr>
+                </table>
+              </td>
+              <td width="50px"></td>
+              <td>
+                <table style="border: none;">
+                  <tr>
+                    <td></td>
+                    <td align="center" width="180px">Movements</td>
+                  </tr>
+                  <tr style="background-color: #f2f2f2;">
+                    <td>stop</td>
+                    <td><span id="stop"></span></td>
+                  </tr>
+                  <tr>
+                    <td>left</td>
+                    <td><span id="left"></span></td>
+                  </tr>
+                  <tr style="background-color: #f2f2f2;">
+                    <td>right</td>
+                    <td><span id="right"></span></td>
+                  </tr>
+                  <tr>
+                    <td>up</td>
+                    <td><span id="up"></span></td>
+                  </tr>
+                  <tr style="background-color: #f2f2f2;">
+                    <td>down</td>
+                    <td><span id="down"></span></td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+        <td width="10%"></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td><br /></td>
+        <td></td>
+      </tr>
+    </table>
+  </body>
+</html>
