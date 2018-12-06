@@ -30,7 +30,7 @@ We recorded about 45 minutes of video and labelled them appropriately. Sequences
 ### Installation
 Prerequisites:
 *	Clone this repo to your local drive. 
-*	Install PoseNet for Installations, available here. You need to clone it as well to your local drive (and install node.js and yarn in case you don't have them yet).
+*	Install PoseNet for Installations, available [here](https://github.com/oveddan/posenet-for-installations). You need to clone it as well to your local drive (and install node.js and yarn in case you don't have them yet).
 *	Optional: get a Tello drone (it’s about 90$ on Amazon).
 
 Once installed, follow these steps to start up the system:
