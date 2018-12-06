@@ -48,7 +48,7 @@ If you want to dive more into the repo you might find the following folder summa
 *	```data```: labelled data collected in our project
 *	```docs```: additional documentation. The most interesting is the PDF slide deck [here](docs/documentation_drone_steering.pdf) explaining more about the data pre-processing and classification models.
 *	```models```: trained models. Here you’ll find two main models – a gesture and a posture model (see above PDF for more details about postures) and a lot of alternative models. You also find a couple of informative notebooks with executed examples of the classes developed in the project.
-
+The videos used for generating training data are available [here](https://drive.google.com/open?id=10Zm0Mb8esGWP0H4BmGmMLVgaNDVdPVNM) with user name _dsr.dronesteering@gmail.com_ and password _fly2theM00n_.
 
 ### Questions
 
