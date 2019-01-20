@@ -478,7 +478,7 @@ class DataEnsembler():
 
 
     def __get_video_stats(self):
-        self.video_stats = pd.read_csv('docs/video_stats.csv', sep="\t")
+        self.video_stats = pd.read_excel('docs/video_stats.xlsx', sheet_name = "overall_time")
         rev = re.compile(DataEnsembler.video_stats_pattern)
 
         group_dicts = []
